@@ -76,20 +76,6 @@ If you avoid, it will show you that too.
 
 ---
 
-🚀 Run Locally
-
-Just open the file:
-
-index.html
-
-Or deploy using:
-
-- GitHub Pages
-- Netlify
-- Vercel
-
----
-
 ⚠️ Disclaimer
 
 This is not therapy.
@@ -98,32 +84,3 @@ This is not mental health support.
 It’s a self-reflection tool designed to surface behavioral patterns.
 
 ---
-
-🧩 Why this exists
-
-Most tools:
-
-- Track habits
-- Give advice
-- Try to motivate
-
-Mirror does something different:
-
-«It shows you the truth you’re avoiding.»
-
----
-
-📌 Future Direction
-
-- Deeper pattern intelligence
-- AI-powered insights
-- Daily reflection system
-- Multi-session identity tracking
-
----
-
-🪞 Final Note
-
-You don’t need more information.
-
-You need to stop ignoring what you already know.
