@@ -21,39 +21,60 @@ body {
     width:90%;
     max-width:600px;
     text-align:center;
-    transition:0.3s;
 }
 
 .text {
-    font-size:18px;
-    line-height:1.6;
+    font-size:20px;
+    line-height:1.7;
     min-height:120px;
-    margin-bottom:20px;
-    transition:opacity 0.3s;
+    margin-bottom:30px;
+    transition:0.3s;
 }
 
 .options {
     display:flex;
     flex-wrap:wrap;
-    gap:10px;
+    gap:12px;
     justify-content:center;
 }
 
 .option {
-    padding:10px 14px;
+    padding:10px 16px;
     border:1px solid rgba(255,255,255,0.2);
     border-radius:20px;
     cursor:pointer;
-    opacity:0;
-    animation:fadeIn 0.5s forwards;
-}
-
-@keyframes fadeIn {
-    to {opacity:1;}
+    transition:0.2s;
 }
 
 .option:hover {
-    background:rgba(255,255,255,0.1);
+    background:rgba(255,255,255,0.15);
+}
+
+textarea {
+    width:100%;
+    margin-top:20px;
+    padding:10px;
+    background:#111;
+    border:1px solid #333;
+    color:#fff;
+    display:none;
+}
+
+/* WRITE BUTTON */
+.write-toggle {
+    position:fixed;
+    bottom:20px;
+    right:20px;
+    background:#111;
+    border:1px solid #444;
+    border-radius:50%;
+    width:50px;
+    height:50px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    font-size:20px;
 }
 </style>
 </head>
@@ -63,136 +84,122 @@ body {
 <div class="container">
     <div id="text" class="text"></div>
     <div id="options" class="options"></div>
+    <textarea id="input" placeholder="Write what you’re holding back..."></textarea>
 </div>
 
+<div class="write-toggle" onclick="toggleWrite()">✍️</div>
+
 <script>
-let state={};
 let step=0;
+let state={};
 
-// MEMORY
-let data=JSON.parse(localStorage.getItem("mirrorV7"))||{
-sessions:0
-};
+function pause(ms){ return new Promise(r=>setTimeout(r,ms)); }
 
-function pause(ms){
-return new Promise(res=>setTimeout(res,ms));
-}
-
-async function typeText(t){
-let el=text;
-el.innerHTML="";
-for(let i=0;i<t.length;i++){
-el.innerHTML+=t[i];
-await pause(15);
-}
+async function typeText(text){
+    let el=document.getElementById("text");
+    el.innerHTML="";
+    for(let i=0;i<text.length;i++){
+        el.innerHTML+=text[i];
+        await pause(20); // slower, readable
+    }
 }
 
 function showOptions(arr,key){
-options.innerHTML="";
-arr.forEach(v=>{
-let d=document.createElement("div");
-d.className="option";
-d.innerText=v;
-d.onclick=()=>{
-state[key]=v;
-next();
-};
-options.appendChild(d);
-});
+    let opt=document.getElementById("options");
+    opt.innerHTML="";
+    arr.forEach(v=>{
+        let d=document.createElement("div");
+        d.className="option";
+        d.innerText=v;
+        d.onclick=()=>{
+            state[key]=v;
+            next();
+        };
+        opt.appendChild(d);
+    });
 }
 
+function toggleWrite(){
+    let input=document.getElementById("input");
+    input.style.display = input.style.display==="none" ? "block" : "none";
+}
+
+// FLOW
 async function next(){
 
 if(step===0){
-await typeText("This shows you what you avoid.");
-await pause(800);
-
-if(data.sessions>0){
-await typeText("You've been here before.");
-await pause(800);
-}
-
-showOptions(["Discipline","Overthinking","Relationship","Money"],"area");
-step++;
-return;
+    await typeText("You’re not here by accident.");
+    await pause(800);
+    await typeText("Something brought you here.");
+    showOptions(["Discipline","Overthinking","Relationship","Direction"],"area");
+    step++;
+    return;
 }
 
 if(step===1){
-await typeText("What did you avoid?");
-showOptions(["Decision","Conversation","Action","Truth"],"avoid");
-step++;
-return;
+    await typeText("What did you avoid?");
+    showOptions(["Decision","Conversation","Action","Truth"],"avoid");
+    step++;
+    return;
 }
 
 if(step===2){
-await typeText("Why?");
-showOptions(["Fear","Comfort","Uncertainty","Rejection"],"why");
-step++;
-return;
+    await typeText("Why?");
+    showOptions(["Fear","Comfort","Uncertainty","Rejection"],"why");
+    step++;
+    return;
 }
 
 // PROCESS
-options.innerHTML="";
-data.sessions++;
-localStorage.setItem("mirrorV7",JSON.stringify(data));
+document.getElementById("options").innerHTML="";
 
-await typeText(`
-You avoided ${state.avoid}.
+await typeText(`You avoided ${state.avoid}.\n\nBecause of ${state.why}.`);
+await pause(1000);
 
-Because of ${state.why}.
-
-This is not new.
-`);
-
+await typeText("This isn’t new.");
 await pause(1200);
 
-await typeText(`
-When it matters...
+await typeText("When it matters...\nyou step back.");
+await pause(1400);
 
-you step back.
-`);
-
+await typeText("If nothing changes...\nthis becomes you.");
 await pause(1500);
 
-await typeText(`
-If nothing changes...
+await typeText("You already know what needs to happen.");
+await pause(1200);
 
-this becomes you.
-`);
-
-await pause(1500);
-
-// FINAL
+// DECISION
 showOptions(["Act","Ignore"],"decision");
 
-options.onclick=null;
+document.querySelectorAll(".option").forEach(btn=>{
+    btn.onclick = async ()=>{
+        document.getElementById("options").innerHTML="";
 
-options.querySelectorAll(".option").forEach(btn=>{
-btn.onclick=async ()=>{
-options.innerHTML="";
+        if(btn.innerText==="Act"){
+            await typeText("Then do it.\n\nBefore your mind softens this moment.");
+        } else {
+            await typeText("Then this repeats.\n\nExactly like before.");
+        }
 
-if(btn.innerText==="Act"){
-await typeText("Then change it now.\n\nDon’t come back the same.");
-}else{
-await typeText(`
-Then this repeats.
+        await pause(1500);
 
-Exactly like before.
+        await typeText("This moment will come back.\n\nWill you be different when it does?");
+        
+        await pause(1500);
 
-And next time...
+        // FINAL OPTIONS
+        showOptions(["Face it again","Go deeper"],"final");
 
-it will feel even more normal.
-`);
-}
-
-await pause(1500);
-
-await typeText(`
-This moment will come back.
-
-Will you be different when it does?
-`);
-};
+        document.querySelectorAll(".option").forEach(f=>{
+            f.onclick=()=>{
+                if(f.innerText==="Face it again"){
+                    location.reload();
+                } else {
+                    toggleWrite();
+                }
+            };
+        });
+    };
 });
 }
 
