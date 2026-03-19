@@ -8,262 +8,196 @@
 <style>
 body {
     margin:0;
-    font-family: 'Courier New', monospace;
-    background: radial-gradient(circle at center, #0d0d0d, #000);
-    color:#f0f0f0;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-    padding:20px;
-}
-
-/* CONTAINER */
-.container {
-    width:100%;
-    max-width:680px;
-    padding:25px;
-    border-radius:18px;
-    backdrop-filter: blur(14px);
-    background: rgba(255,255,255,0.02);
-    border:1px solid rgba(255,255,255,0.06);
-}
-
-/* TEXT */
-.text {
-    font-size:17px;
-    line-height:1.7;
-    min-height:120px;
-    white-space:pre-line;
-}
-
-/* INPUT */
-textarea {
-    width:100%;
-    box-sizing:border-box;
-    margin-top:20px;
-    padding:12px;
-    border-radius:8px;
-    border:1px solid rgba(255,255,255,0.1);
-    background: rgba(0,0,0,0.7);
-    color:#fff;
     font-family:'Courier New', monospace;
-    resize:none;
-}
-
-/* BUTTON */
-button {
-    cursor:pointer;
-    margin-top:15px;
-    padding:10px 18px;
-    border-radius:8px;
-    border:1px solid rgba(255,255,255,0.2);
-    background:transparent;
-    color:white;
-}
-
-button:hover {
-    background: rgba(255,255,255,0.08);
-}
-
-/* POPUP */
-.popup {
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.85);
+    background:#000;
+    color:#f5f5f5;
     display:flex;
     justify-content:center;
     align-items:center;
-    z-index:10;
+    height:100vh;
 }
 
-.popup-content {
-    max-width:400px;
+.container {
+    width:90%;
+    max-width:600px;
     text-align:center;
-    padding:25px;
-    border-radius:12px;
-    background: rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.1);
+    transition:0.3s;
+}
+
+.text {
+    font-size:18px;
+    line-height:1.6;
+    min-height:120px;
+    margin-bottom:20px;
+    transition:opacity 0.3s;
+}
+
+.options {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+}
+
+.option {
+    padding:10px 14px;
+    border:1px solid rgba(255,255,255,0.2);
+    border-radius:20px;
+    cursor:pointer;
+    opacity:0;
+    animation:fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+    to {opacity:1;}
+}
+
+.option:hover {
+    background:rgba(255,255,255,0.1);
 }
 </style>
 </head>
 
 <body>
 
-<!-- POPUP -->
-<div id="popup" class="popup">
-    <div class="popup-content">
-        <h3>Mirror</h3>
-        <p>This won’t motivate you.<br><br>
-        It shows what you already know<br>
-        but keep avoiding.<br><br>
-        Answer honestly.<br>
-        Or it won’t work.</p>
-        <button onclick="start()">Enter</button>
-    </div>
-</div>
-
 <div class="container">
     <div id="text" class="text"></div>
-    <textarea id="input" rows="3" placeholder="Type honestly..."></textarea>
-    <button id="btn" onclick="next()">Continue</button>
+    <div id="options" class="options"></div>
 </div>
 
 <script>
+let state={};
 let step=0;
-let answers=[];
-let mode="questions";
 
-// STORAGE
-let data=JSON.parse(localStorage.getItem("mirrorV4"))||{
-sessions:0,
-patterns:{},
-identity:""
+// MEMORY
+let data=JSON.parse(localStorage.getItem("mirrorV7"))||{
+sessions:0
 };
 
-// QUESTIONS
-const questions=[
-"Who are you trying to become right now?",
-"What are you dealing with?",
-"What did you know… but didn’t act on?",
-"What did you avoid?",
-"What are you not admitting?"
-];
-
-// START
-function start(){
-document.getElementById("popup").style.display="none";
-typeText("This will show you what you keep avoiding.\n\nAnswer honestly.");
+function pause(ms){
+return new Promise(res=>setTimeout(res,ms));
 }
 
-// TYPE EFFECT
-function typeText(text,cb){
-let i=0;
-let el=document.getElementById("text");
+async function typeText(t){
+let el=text;
 el.innerHTML="";
-let int=setInterval(()=>{
-el.innerHTML+=text[i];
-i++;
-if(i>=text.length){
-clearInterval(int);
-if(cb)setTimeout(cb,700);
+for(let i=0;i<t.length;i++){
+el.innerHTML+=t[i];
+await pause(15);
 }
-},18);
 }
 
-// NEXT
-function next(){
-let input=document.getElementById("input");
-let val=input.value.trim().toLowerCase();
-
-if(mode==="release"){
-typeText("You said it.\n\nNow don’t go back to silence.");
-input.style.display="none";
-btn.style.display="none";
-return;
+function showOptions(arr,key){
+options.innerHTML="";
+arr.forEach(v=>{
+let d=document.createElement("div");
+d.className="option";
+d.innerText=v;
+d.onclick=()=>{
+state[key]=v;
+next();
+};
+options.appendChild(d);
+});
 }
 
-if(val.length<3){
-typeText("Still avoiding. Try again.");
-return;
-}
-
-answers.push(val);
+async function next(){
 
 if(step===0){
-data.identity=val;
+await typeText("This shows you what you avoid.");
+await pause(800);
+
+if(data.sessions>0){
+await typeText("You've been here before.");
+await pause(800);
 }
 
-input.value="";
+showOptions(["Discipline","Overthinking","Relationship","Money"],"area");
 step++;
-
-if(step<questions.length){
-typeText(questions[step]);
-}else{
-process();
-}
+return;
 }
 
-// PATTERN
-function detectPattern(){
-let text=answers.join(" ");
-if(text.match(/avoid|delay|later/)) return "avoid";
-if(text.match(/change|accept|people/)) return "approval";
-if(text.match(/lazy|easy/)) return "comfort";
-if(text.match(/think|overthink/)) return "think";
-return "default";
+if(step===1){
+await typeText("What did you avoid?");
+showOptions(["Decision","Conversation","Action","Truth"],"avoid");
+step++;
+return;
+}
+
+if(step===2){
+await typeText("Why?");
+showOptions(["Fear","Comfort","Uncertainty","Rejection"],"why");
+step++;
+return;
 }
 
 // PROCESS
-function process(){
-let pattern=detectPattern();
-
+options.innerHTML="";
 data.sessions++;
-data.patterns[pattern]=(data.patterns[pattern]||0)+1;
+localStorage.setItem("mirrorV7",JSON.stringify(data));
 
-localStorage.setItem("mirrorV4",JSON.stringify(data));
+await typeText(`
+You avoided ${state.avoid}.
 
-input.style.display="none";
-btn.style.display="none";
+Because of ${state.why}.
 
-let count=data.patterns[pattern];
-let identity=data.identity;
+This is not new.
+`);
 
-let output="";
+await pause(1200);
 
-// CONTRADICTION ENGINE
-output+=`You said you want to be: ${identity}\n\n`;
+await typeText(`
+When it matters...
 
-if(pattern==="avoid"){
-output+=`But you avoided what mattered.\n\n`;
-}
-if(pattern==="approval"){
-output+=`But you changed yourself to be accepted.\n\n`;
-}
-if(pattern==="comfort"){
-output+=`But you chose comfort over effort.\n\n`;
-}
-if(pattern==="think"){
-output+=`But you stayed in your head instead of moving.\n\n`;
-}
+you step back.
+`);
 
-// ESCALATION
-if(count>=3){
-output+=`This is the ${count}rd time you're seeing this.\n\n`;
-}
+await pause(1500);
 
-// CORE HIT
-output+=`This isn’t confusion.\nIt’s contradiction.\n\n`;
+await typeText(`
+If nothing changes...
 
-// FUTURE PROJECTION
-output+=`If nothing changes:\n\nThis won’t stay a phase.\nIt becomes who you are.\n\n`;
+this becomes you.
+`);
 
-// REALIZATION
-output+=`You already know what needs to be done.\n\n`;
+await pause(1500);
 
-// ACTION
-output+=`Now:\nAct on it before you think again.\n\n`;
+// FINAL
+showOptions(["Act","Ignore"],"decision");
 
-// REFLECTION
-output+=`If this shows up again tomorrow...\nwill you still choose the same?`;
+options.onclick=null;
 
-typeText(output,startRelease);
-}
+options.querySelectorAll(".option").forEach(btn=>{
+btn.onclick=async ()=>{
+options.innerHTML="";
 
-// RELEASE
-function startRelease(){
-mode="release";
-input.style.display="block";
-btn.style.display="block";
-input.placeholder="Say what you didn’t say...";
-input.value="";
+if(btn.innerText==="Act"){
+await typeText("Then change it now.\n\nDon’t come back the same.");
+}else{
+await typeText(`
+Then this repeats.
+
+Exactly like before.
+
+And next time...
+
+it will feel even more normal.
+`);
 }
 
-// INIT TEXT (before popup)
-document.getElementById("text").innerText="";
+await pause(1500);
+
+await typeText(`
+This moment will come back.
+
+Will you be different when it does?
+`);
+};
+});
+}
+
+// start
+next();
 </script>
 
 </body>
