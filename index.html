@@ -1,211 +1,1571 @@
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Mirror</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-body {
-    margin:0;
-    font-family:'Courier New', monospace;
-    background:#000;
-    color:#f5f5f5;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
+:root {
+  --bg:   #080809;
+  --s1:   #0f0f11;
+  --s2:   #161619;
+  --s3:   #1e1e22;
+  --b1:   rgba(255,255,255,0.06);
+  --b2:   rgba(255,255,255,0.13);
+  --b3:   rgba(255,255,255,0.22);
+  --ink:  #edeae4;
+  --ink2: rgba(237,234,228,0.5);
+  --ink3: rgba(237,234,228,0.25);
+  --gold: #c8a96b;
+  --gs:   rgba(200,169,107,0.10);
+  --gm:   rgba(200,169,107,0.20);
+  --red:  #d96b6b;
+  --grn:  #6bb87e;
+  --f:    'Instrument Serif', Georgia, serif;
+  --m:    'Geist Mono', 'Courier New', monospace;
+  --r:    8px;
+  --sb:   env(safe-area-inset-bottom, 0px);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;-webkit-text-size-adjust:100%;}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--f);
+  min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;border:none;background:none;cursor:pointer;}
+input,textarea{font-family:inherit;}
+
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:999;opacity:.65;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
 }
 
-.container {
-    width:90%;
-    max-width:600px;
-    text-align:center;
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:90;height:52px;
+  display:flex;align-items:center;justify-content:space-between;padding:0 20px;
+  background:rgba(8,8,9,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--b1);
+}
+.tb-logo{font-family:var(--f);font-size:17px;color:var(--ink2);}
+.tb-badge{
+  font-family:var(--m);font-size:10px;letter-spacing:.14em;
+  color:var(--gold);background:var(--gs);border:1px solid var(--gm);
+  border-radius:20px;padding:3px 11px;text-transform:uppercase;
+}
+.tb-mid{font-family:var(--m);font-size:10px;color:var(--ink3);letter-spacing:.1em;}
+
+#prog{position:fixed;top:52px;left:0;right:0;z-index:89;height:2px;background:var(--s2);display:none;}
+#prog-f{height:100%;background:var(--gold);transition:width .5s cubic-bezier(.4,0,.2,1);width:0%;}
+
+.screen{
+  display:none;width:100%;max-width:580px;margin:0 auto;
+  padding:72px 22px calc(108px + var(--sb));animation:fU .45s ease both;
+}
+.screen.active{display:block;}
+@keyframes fU{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── HOME ── */
+.h-eye{
+  font-family:var(--m);font-size:10px;letter-spacing:.2em;
+  color:var(--gold);text-transform:uppercase;margin-bottom:22px;
+  display:flex;align-items:center;gap:10px;
+}
+.h-eye::after{content:'';flex:1;height:1px;background:var(--b1);}
+.h-title{font-size:clamp(36px,9vw,62px);line-height:1.05;margin-bottom:18px;letter-spacing:-.01em;}
+.h-title em{font-style:italic;color:var(--gold);}
+.h-sub{font-size:17px;line-height:1.75;color:var(--ink2);margin-bottom:36px;max-width:420px;}
+
+.btn-cta{
+  display:inline-flex;align-items:center;gap:10px;
+  background:var(--gold);color:#080809;font-family:var(--m);font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;padding:13px 24px;
+  border-radius:var(--r);transition:all .2s;font-weight:500;
+}
+.btn-cta:hover{background:#d4b57c;transform:translateY(-1px);}
+.btn-cta:active{transform:translateY(0);}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:8px;background:transparent;
+  color:var(--ink2);font-family:var(--m);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;padding:12px 18px;border-radius:var(--r);
+  border:1px solid var(--b1);transition:all .2s;margin-left:10px;
+}
+.btn-ghost:hover{border-color:var(--b2);color:var(--ink);}
+.btn-ghost.nl{margin-left:0;}
+
+.done-b{
+  display:none;padding:14px 18px;border-radius:var(--r);
+  background:var(--gs);border:1px solid var(--gm);
+  font-family:var(--m);font-size:13px;color:var(--gold);
+  letter-spacing:.02em;margin-bottom:24px;line-height:1.5;
+}
+.done-b.show{display:block;}
+
+/* DEPTH SCORE */
+.depth-card{
+  margin-top:36px;padding:24px;
+  border:1px solid var(--b2);border-radius:var(--r);background:var(--s1);
+}
+.depth-card-top{
+  display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;
+}
+.depth-num{
+  font-family:var(--m);font-size:54px;font-weight:300;
+  line-height:1;color:var(--gold);
+}
+.depth-max{font-family:var(--m);font-size:14px;color:var(--ink3);margin-top:6px;}
+.depth-label-col{text-align:right;}
+.depth-title{font-size:22px;color:var(--ink);margin-bottom:4px;}
+.depth-sub{font-family:var(--m);font-size:11px;color:var(--ink3);letter-spacing:.04em;}
+.depth-bar-track{height:3px;background:var(--s3);border-radius:2px;margin-bottom:12px;overflow:hidden;}
+.depth-bar-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.depth-desc{font-size:15px;color:var(--ink2);line-height:1.65;}
+
+.h-kpi{
+  margin-top:28px;padding-top:24px;border-top:1px solid var(--b1);
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+}
+.kpi-n{font-family:var(--m);font-size:28px;font-weight:300;line-height:1;margin-bottom:6px;}
+.kpi-l{font-family:var(--m);font-size:9px;letter-spacing:.16em;color:var(--ink3);text-transform:uppercase;}
+
+.loop-home{
+  display:none;margin-top:20px;padding:16px 18px;
+  border:1px solid var(--gm);border-radius:var(--r);background:var(--gs);
+}
+.loop-home.show{display:block;}
+.loop-home-l{font-family:var(--m);font-size:9px;letter-spacing:.16em;color:var(--gold);text-transform:uppercase;margin-bottom:6px;}
+.loop-home-name{font-size:20px;color:var(--ink);}
+.loop-home-sub{font-family:var(--m);font-size:11px;color:var(--ink3);margin-top:4px;}
+
+.crisis-b{
+  display:none;padding:14px 18px;border-radius:var(--r);
+  background:rgba(217,107,107,0.08);border:1px solid rgba(217,107,107,0.2);
+  font-family:var(--m);font-size:11px;color:rgba(237,200,200,0.8);
+  letter-spacing:.02em;line-height:1.6;margin-bottom:20px;
+}
+.crisis-b.show{display:block;}
+
+/* ── CONVERSATION ── */
+#s-reflect{padding-top:68px;}
+.conv-wrap{display:flex;flex-direction:column;gap:0;}
+
+.conv-msg{
+  opacity:0;transform:translateY(10px);
+  transition:opacity .4s ease,transform .4s ease;
+  margin-bottom:26px;
+}
+.conv-msg.visible{opacity:1;transform:translateY(0);}
+
+.msg-mirror{font-size:clamp(20px,4.5vw,27px);line-height:1.6;color:var(--ink);}
+.msg-mirror .cur{
+  display:inline-block;width:2px;height:.9em;background:var(--gold);
+  margin-left:2px;vertical-align:text-bottom;
+  animation:blink 1s step-end infinite;
+}
+@keyframes blink{50%{opacity:0;}}
+
+.msg-ctx{
+  font-family:var(--m);font-size:11px;color:var(--gold);letter-spacing:.05em;
+  padding:9px 13px;background:var(--gs);border-radius:6px;border-left:2px solid var(--gold);
 }
 
-.text {
-    font-size:20px;
-    line-height:1.7;
-    min-height:120px;
-    margin-bottom:30px;
-    transition:0.3s;
+.msg-opts{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
+.msg-opts.col1{grid-template-columns:1fr;}
+
+.opt{
+  padding:16px 15px;border:1px solid var(--b1);border-radius:var(--r);
+  background:var(--s1);cursor:pointer;text-align:left;
+  transition:all .2s;position:relative;overflow:hidden;
+}
+.opt-l{font-size:16px;color:var(--ink2);display:block;margin-bottom:3px;}
+.opt-s{font-family:var(--m);font-size:10px;color:var(--ink3);}
+.opt::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:var(--gold);transform:scaleY(0);transition:.2s;transform-origin:bottom;
+}
+.opt:hover{border-color:var(--b2);background:var(--s2);}
+.opt:hover .opt-l{color:var(--ink);}
+.opt:hover::before{transform:scaleY(1);}
+.opt.sel{border-color:var(--gold);background:var(--gs);pointer-events:none;}
+.opt.sel .opt-l{color:var(--ink);}
+.opt.sel::before{transform:scaleY(1);}
+.opts-disabled .opt:not(.sel){opacity:.3;pointer-events:none;}
+.opt.sensitive{border-color:rgba(200,169,107,0.15);}
+
+.msg-reply{
+  font-size:18px;color:var(--ink);font-style:italic;
+  padding:12px 16px;background:var(--s2);border-radius:var(--r);
+  border-left:2px solid var(--b2);
+}
+.msg-fup{font-size:18px;line-height:1.7;color:var(--ink2);}
+.msg-note{font-family:var(--m);font-size:11px;color:var(--ink3);letter-spacing:.04em;}
+
+.msg-care{
+  font-size:15px;line-height:1.7;color:rgba(237,200,200,0.75);
+  padding:14px 18px;background:rgba(217,107,107,0.07);
+  border-radius:var(--r);border-left:2px solid rgba(217,107,107,0.3);
+  font-family:var(--m);font-size:12px;letter-spacing:.02em;
 }
 
-.options {
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    justify-content:center;
+.mood-row{display:flex;justify-content:space-between;gap:8px;}
+.mood-e{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:12px 6px;border:1px solid var(--b1);border-radius:var(--r);
+  background:var(--s1);cursor:pointer;transition:all .18s;
+}
+.mood-e:hover,.mood-e.sel{border-color:var(--gold);background:var(--gs);}
+.mood-e-i{font-size:20px;}
+.mood-e-l{font-family:var(--m);font-size:9px;color:var(--ink3);letter-spacing:.05em;}
+
+.fw-wrap{display:flex;flex-direction:column;}
+.fw-area{
+  width:100%;min-height:120px;background:var(--s1);
+  border:1px solid var(--b1);border-radius:var(--r);
+  color:var(--ink);font-family:var(--f);font-size:17px;
+  line-height:1.8;padding:16px;outline:none;resize:none;
+  transition:border-color .2s;margin-bottom:8px;
+}
+.fw-area:focus{border-color:var(--b3);}
+.fw-area::placeholder{color:var(--ink3);}
+.fw-cc{font-family:var(--m);font-size:10px;color:var(--ink3);text-align:right;margin-bottom:16px;}
+.btn-row{display:flex;gap:10px;}
+
+.msg-done{
+  font-size:clamp(20px,4.5vw,27px);line-height:1.65;color:var(--ink);
+  padding:24px 0;border-top:1px solid var(--b1);
 }
 
-.option {
-    padding:10px 16px;
-    border:1px solid rgba(255,255,255,0.2);
-    border-radius:20px;
-    cursor:pointer;
-    transition:0.2s;
+/* ── MIRROR SCREEN ── */
+.mir-lbl{font-family:var(--m);font-size:10px;letter-spacing:.16em;color:var(--ink3);text-transform:uppercase;margin-bottom:32px;}
+.mir-stmt{
+  font-size:clamp(19px,4vw,26px);line-height:1.8;
+  padding:26px 26px 26px 34px;border:1px solid var(--b1);
+  border-radius:var(--r);background:var(--s1);position:relative;margin-bottom:32px;
 }
+.mir-stmt::before{
+  content:'"';position:absolute;top:-12px;left:18px;
+  font-size:64px;color:var(--gold);opacity:.22;font-family:var(--f);line-height:1;
+}
+.mir-stmt em{font-style:italic;color:var(--gold);}
 
-.option:hover {
-    background:rgba(255,255,255,0.15);
-}
+.mir-cells{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:28px;}
+.mir-c{padding:14px 16px;border:1px solid var(--b1);border-radius:var(--r);background:var(--s1);}
+.mir-c-l{font-family:var(--m);font-size:9px;letter-spacing:.13em;color:var(--ink3);text-transform:uppercase;margin-bottom:5px;}
+.mir-c-v{font-size:15px;color:var(--ink2);}
 
-textarea {
-    width:100%;
-    margin-top:20px;
-    padding:10px;
-    background:#111;
-    border:1px solid #333;
-    color:#fff;
-    display:none;
-}
+.slabel{font-family:var(--m);font-size:9px;letter-spacing:.16em;color:var(--ink3);text-transform:uppercase;margin-bottom:14px;}
 
-/* WRITE BUTTON */
-.write-toggle {
-    position:fixed;
-    bottom:20px;
-    right:20px;
-    background:#111;
-    border:1px solid #444;
-    border-radius:50%;
-    width:50px;
-    height:50px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    font-size:20px;
+.insight-block{
+  font-size:clamp(17px,3.5vw,21px);line-height:1.8;font-style:italic;
+  color:var(--ink2);padding:22px 24px;border-left:2px solid var(--gold);
+  margin-bottom:28px;background:var(--s1);
+  border-radius:0 var(--r) var(--r) 0;min-height:80px;
 }
+.dots{display:flex;gap:5px;align-items:center;padding:4px 0;}
+.dots span{
+  width:5px;height:5px;border-radius:50%;background:var(--gold);opacity:.4;
+  animation:dp 1.2s ease-in-out infinite;
+}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes dp{0%,100%{opacity:.4;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}
+
+.loop-reveal{
+  display:none;padding:22px 24px;border:1px solid var(--gm);
+  border-radius:var(--r);background:var(--gs);margin-bottom:24px;
+}
+.loop-reveal.show{display:block;}
+.loop-reveal-l{font-family:var(--m);font-size:9px;letter-spacing:.16em;color:var(--gold);text-transform:uppercase;margin-bottom:12px;}
+.loop-reveal-name{font-size:26px;margin-bottom:8px;}
+.loop-reveal-desc{font-size:15px;color:var(--ink2);line-height:1.65;margin-bottom:18px;}
+.loop-rename-row{display:flex;gap:8px;align-items:center;}
+.loop-rename-in{
+  flex:1;background:transparent;border:none;
+  border-bottom:1px solid var(--b2);color:var(--ink);
+  font-family:var(--f);font-size:18px;padding:8px 0;outline:none;
+  transition:border-color .2s;
+}
+.loop-rename-in:focus{border-color:var(--gold);}
+.loop-rename-in::placeholder{color:var(--ink3);}
+.loop-rename-btn{
+  padding:8px 14px;background:var(--gold);color:#080809;
+  font-family:var(--m);font-size:10px;letter-spacing:.1em;
+  border-radius:6px;transition:background .18s;
+}
+.loop-rename-btn:hover{background:#d4b57c;}
+
+.commit-box{padding:22px;border:1px solid var(--b2);border-radius:var(--r);background:var(--s2);margin-top:24px;}
+.commit-box h4{font-family:var(--m);font-size:9px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;margin-bottom:14px;}
+.commit-in{
+  width:100%;background:transparent;border:none;
+  border-bottom:1px solid var(--b1);color:var(--ink);
+  font-family:var(--f);font-size:18px;padding:10px 0;
+  outline:none;transition:border-color .2s;margin-bottom:18px;
+}
+.commit-in:focus{border-color:var(--gold);}
+.commit-in::placeholder{color:var(--ink3);}
+.commit-saved{font-family:var(--m);font-size:11px;color:var(--grn);letter-spacing:.06em;display:none;padding:10px 0;}
+
+/* ── PATTERNS ── */
+.pat-title{font-size:clamp(28px,7vw,42px);font-weight:400;margin-bottom:6px;}
+.pat-sub{font-family:var(--m);font-size:11px;color:var(--ink3);letter-spacing:.08em;margin-bottom:36px;}
+
+.depth-pat{
+  padding:20px 22px;border:1px solid var(--b2);border-radius:var(--r);
+  background:var(--s1);margin-bottom:32px;
+  display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;
+}
+.depth-pat-num{font-family:var(--m);font-size:44px;font-weight:300;color:var(--gold);line-height:1;}
+.depth-pat-right{}
+.depth-pat-title{font-size:18px;margin-bottom:4px;}
+.depth-pat-desc{font-family:var(--m);font-size:11px;color:var(--ink3);line-height:1.5;}
+
+.grid30{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:36px;}
+.gd{aspect-ratio:1;border-radius:4px;background:var(--s2);border:1px solid var(--b1);}
+.gd.done{background:var(--gs);border-color:rgba(200,169,107,.28);}
+.gd.today{border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,169,107,.13);}
+.gd.future{opacity:.25;}
+.gd-n{font-family:var(--m);font-size:8px;color:var(--ink3);text-align:center;margin-top:3px;}
+
+.bar-section{margin-bottom:32px;}
+.bar-hd{display:flex;justify-content:space-between;font-family:var(--m);font-size:9px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;margin-bottom:14px;}
+.bar-item{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.bar-item-l{font-family:var(--m);font-size:11px;color:var(--ink2);width:96px;flex-shrink:0;}
+.bar-track{flex:1;height:3px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.bar-fill{height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.bar-ct{font-family:var(--m);font-size:10px;color:var(--ink3);width:20px;text-align:right;}
+
+.loop-pat{display:none;padding:20px 22px;border:1px solid var(--gm);border-radius:var(--r);background:var(--gs);margin-bottom:28px;}
+.loop-pat.show{display:block;}
+.loop-pat-l{font-family:var(--m);font-size:9px;letter-spacing:.16em;color:var(--gold);text-transform:uppercase;margin-bottom:10px;}
+.loop-pat-name{font-size:24px;margin-bottom:6px;}
+.loop-pat-desc{font-size:14px;color:var(--ink2);line-height:1.6;}
+
+.weekly-box{display:none;padding:22px;border:1px solid var(--b1);border-radius:var(--r);background:var(--s1);margin-bottom:24px;}
+.weekly-box.show{display:block;}
+.weekly-box-l{font-family:var(--m);font-size:9px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;margin-bottom:12px;}
+.weekly-text{font-size:16px;line-height:1.7;color:var(--ink2);font-style:italic;}
+
+.past-card{padding:20px;border:1px solid var(--b1);border-radius:var(--r);background:var(--s1);margin-bottom:12px;}
+.past-d{font-family:var(--m);font-size:9px;letter-spacing:.1em;color:var(--ink3);text-transform:uppercase;margin-bottom:10px;}
+.past-t{font-size:15px;line-height:1.65;color:var(--ink2);}
+.past-t strong{color:var(--ink);font-weight:400;}
+.past-write{margin-top:10px;font-style:italic;font-size:14px;color:var(--ink2);border-left:2px solid var(--b2);padding-left:12px;line-height:1.6;}
+.past-insight{margin-top:10px;font-style:italic;font-size:14px;color:rgba(237,234,228,0.45);border-left:2px solid var(--gm);padding-left:12px;line-height:1.6;}
+.past-tag{display:inline-block;margin-top:10px;padding:3px 10px;background:var(--gs);border:1px solid var(--gm);border-radius:20px;font-family:var(--m);font-size:9px;color:var(--gold);letter-spacing:.06em;}
+
+.empty-st{text-align:center;padding:60px 20px;font-family:var(--m);font-size:12px;color:var(--ink3);letter-spacing:.06em;}
+.div{height:1px;background:var(--b1);margin:28px 0;}
+
+#nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:90;
+  display:flex;flex-direction:column;align-items:center;gap:0;
+  padding:0;
+  background:rgba(8,8,9,.93);backdrop-filter:blur(18px);border-top:1px solid var(--b1);
+}
+.nav-buttons{
+  display:flex;justify-content:center;gap:2px;width:100%;
+  padding:10px 16px 6px;
+}
+.nav-disclaimer{
+  font-family:var(--m);font-size:9px;color:var(--ink3);
+  letter-spacing:.04em;text-align:center;opacity:.55;
+  padding-bottom:calc(10px + var(--sb));
+  line-height:1.5;
+}
+.nb{flex:1;max-width:90px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:8px;transition:background .2s;}
+.nb:hover{background:var(--s1);}
+.nb-i{font-size:17px;line-height:1;}
+.nb-l{font-family:var(--m);font-size:9px;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;transition:color .2s;}
+.nb.active .nb-l{color:var(--gold);}
+
+#modal{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);display:none;align-items:flex-end;justify-content:center;padding:0 0 16px;}
+#modal.open{display:flex;}
+.modal-box{background:var(--s1);border:1px solid var(--b1);border-radius:12px 12px 8px 8px;padding:28px 24px calc(24px + var(--sb));width:100%;max-width:580px;animation:sU .3s ease both;}
+@keyframes sU{from{transform:translateY(40px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-box h3{font-size:20px;margin-bottom:14px;}
+.modal-box p{font-size:14px;color:var(--ink2);line-height:1.7;margin-bottom:20px;}
+.close-modal{float:right;font-size:18px;color:var(--ink3);cursor:pointer;margin-top:-4px;}
+.danger-btn{padding:12px 20px;border:1px solid var(--red);color:var(--red);border-radius:var(--r);font-family:var(--m);font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;background:transparent;transition:all .2s;}
+.danger-btn:hover{background:rgba(217,107,107,.1);}
+
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
 </style>
 </head>
-
 <body>
 
-<div class="container">
-    <div id="text" class="text"></div>
-    <div id="options" class="options"></div>
-    <textarea id="input" placeholder="Write what you’re holding back..."></textarea>
+<div id="topbar">
+  <span class="tb-logo">mirror</span>
+  <span class="tb-mid" id="tb-mid"></span>
+  <span class="tb-badge" id="tb-badge">Depth 0</span>
+</div>
+<div id="prog"><div id="prog-f"></div></div>
+
+<!-- HOME -->
+<div class="screen active" id="s-home">
+  <div class="crisis-b" id="crisis-b">
+    If you are in crisis right now — iCall: 9152987821 &nbsp;|&nbsp; Vandrevala Foundation: 1860-2662-345 (24/7)
+  </div>
+  <div class="done-b" id="done-b"></div>
+  <div class="h-eye">Self-honesty, at your own pace</div>
+  <h1 class="h-title">The version<br>of you<br>you <em>avoid.</em></h1>
+  <p class="h-sub">One honest session whenever you are ready. Mirror tracks how deep you are willing to go — not how many days in a row.</p>
+  <button class="btn-cta" id="begin-btn" onclick="beginReflect()">Begin today ↗</button>
+  <button class="btn-ghost" onclick="goPatterns()">My patterns</button>
+
+  <div class="depth-card" id="depth-card">
+    <div class="depth-card-top">
+      <div>
+        <div class="depth-num" id="depth-num">0</div>
+        <div class="depth-max">/ 10</div>
+      </div>
+      <div class="depth-label-col">
+        <div class="depth-title" id="depth-title">Surface</div>
+        <div class="depth-sub" id="depth-sub">Your first session unlocks this</div>
+      </div>
+    </div>
+    <div class="depth-bar-track">
+      <div class="depth-bar-fill" id="depth-bar" style="width:0%"></div>
+    </div>
+    <div class="depth-desc" id="depth-desc">Depth measures how honestly and consistently you look at yourself — not how many days in a row you show up.</div>
+  </div>
+
+  <div class="loop-home" id="loop-home">
+    <div class="loop-home-l">Your named loop</div>
+    <div class="loop-home-name" id="loop-home-name"></div>
+    <div class="loop-home-sub" id="loop-home-sub"></div>
+  </div>
+
+  <div class="h-kpi">
+    <div><div class="kpi-n" id="kpi-s">0</div><div class="kpi-l">Sessions</div></div>
+    <div><div class="kpi-n" id="kpi-k">0</div><div class="kpi-l">Streak</div></div>
+    <div><div class="kpi-n" id="kpi-t">—</div><div class="kpi-l">Top pattern</div></div>
+  </div>
 </div>
 
-<div class="write-toggle" onclick="toggleWrite()">✍️</div>
+<!-- REFLECT -->
+<div class="screen" id="s-reflect">
+  <div class="conv-wrap" id="conv"></div>
+</div>
+
+<!-- MIRROR -->
+<div class="screen" id="s-mirror">
+  <div class="mir-lbl">Session <span id="mir-sess-n">1</span></div>
+  <div class="mir-stmt" id="mir-stmt"></div>
+  <div class="slabel" style="margin-bottom:12px">This session</div>
+  <div class="mir-cells" id="mir-cells"></div>
+  <div class="div"></div>
+  <div class="slabel">What it says</div>
+  <div class="insight-block" id="insight-block">
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+  <div class="loop-reveal" id="loop-reveal">
+    <div class="loop-reveal-l">You have a loop</div>
+    <div class="loop-reveal-name" id="loop-reveal-name"></div>
+    <div class="loop-reveal-desc" id="loop-reveal-desc"></div>
+    <div class="loop-rename-row">
+      <input class="loop-rename-in" id="loop-rename-in" placeholder="Rename it if you want..." maxlength="40">
+      <button class="loop-rename-btn" onclick="saveLoopName()">Save</button>
+    </div>
+  </div>
+  <div class="commit-box">
+    <h4>One thing you will actually do</h4>
+    <input class="commit-in" type="text" id="commit-in" placeholder="Be specific. One sentence.">
+    <button class="btn-cta" onclick="saveCommit()">Lock it in</button>
+    <div class="commit-saved" id="commit-saved">Saved.</div>
+  </div>
+  <div style="height:20px"></div>
+  <button class="btn-ghost btn-nl" onclick="goHome()">Home</button>
+</div>
+
+<!-- PATTERNS -->
+<div class="screen" id="s-patterns">
+  <h2 class="pat-title">Your patterns.</h2>
+  <div class="pat-sub"><span id="pat-n">0</span> sessions</div>
+
+  <div class="depth-pat" id="depth-pat">
+    <div class="depth-pat-num" id="dpat-num">0</div>
+    <div class="depth-pat-right">
+      <div class="depth-pat-title" id="dpat-title">Surface</div>
+      <div class="depth-pat-desc" id="dpat-desc">Start reflecting to build your depth score.</div>
+    </div>
+  </div>
+
+  <div class="slabel">Attendance</div>
+  <div class="grid30" id="grid30"></div>
+
+  <div class="loop-pat" id="loop-pat">
+    <div class="loop-pat-l">Named loop</div>
+    <div class="loop-pat-name" id="loop-pat-name"></div>
+    <div class="loop-pat-desc" id="loop-pat-desc"></div>
+  </div>
+  <div class="weekly-box" id="weekly-box">
+    <div class="weekly-box-l">What the pattern says</div>
+    <div class="weekly-text" id="weekly-text">Loading...</div>
+  </div>
+  <div class="bar-section" id="bar-avoid" style="display:none">
+    <div class="bar-hd"><span>What you avoid most</span></div>
+    <div id="bars-avoid"></div>
+  </div>
+  <div class="bar-section" id="bar-root" style="display:none">
+    <div class="bar-hd"><span>Root causes</span></div>
+    <div id="bars-root"></div>
+  </div>
+  <div class="bar-section" id="bar-area" style="display:none">
+    <div class="bar-hd"><span>Life areas</span></div>
+    <div id="bars-area"></div>
+  </div>
+  <div class="div"></div>
+  <div class="slabel">Past sessions</div>
+  <div id="past-list"></div>
+  <div style="height:16px"></div>
+  <button class="btn-ghost btn-nl" onclick="goHome()">Home</button>
+  <button class="btn-ghost" onclick="openModal()">Settings</button>
+</div>
+
+<div id="nav">
+  <div class="nav-buttons">
+    <button class="nb active" id="nb-home" onclick="goHome()"><span class="nb-i">◎</span><span class="nb-l">Home</span></button>
+    <button class="nb" id="nb-reflect" onclick="beginReflect()"><span class="nb-i">◈</span><span class="nb-l">Reflect</span></button>
+    <button class="nb" id="nb-patterns" onclick="goPatterns()"><span class="nb-i">◉</span><span class="nb-l">Patterns</span></button>
+  </div>
+  <div class="nav-disclaimer">Mirror is a self-reflection tool only. Not a therapist, not a substitute for professional help.</div>
+</div>
+
+<div id="modal">
+  <div class="modal-box">
+    <span class="close-modal" onclick="closeModal()">x</span>
+    <h3>Settings</h3>
+    <p>Erase all sessions and start fresh. Cannot be undone.</p>
+    <button class="danger-btn" onclick="resetAll()">Reset everything</button>
+  </div>
+</div>
 
 <script>
-let step=0;
-let state={};
+var KEY = 'mirror_v6';
 
-function pause(ms){ return new Promise(r=>setTimeout(r,ms)); }
+var AREAS = [
+  {v:'discipline', l:'Discipline',   s:'Focus, habits, follow-through'},
+  {v:'relation',   l:'Relationship', s:'People, conflict, connection'},
+  {v:'direction',  l:'Direction',    s:'Purpose, decisions, the future'},
+  {v:'identity',   l:'Identity',     s:'Self-worth, who you are'},
+  {v:'mind',       l:'Mind',         s:'Loops, anxiety, overthinking'},
+  {v:'work',       l:'Work',         s:'Ambition, money, performance'},
+  {v:'addiction',  l:'Addiction',    s:'Habits that have taken over'},
+  {v:'depression', l:'Depression',   s:'Heaviness, absence, low flame'},
+];
 
-async function typeText(text){
-    let el=document.getElementById("text");
-    el.innerHTML="";
-    for(let i=0;i<text.length;i++){
-        el.innerHTML+=text[i];
-        await pause(20); // slower, readable
+var SENSITIVE_AREAS = {addiction:true, depression:true};
+
+var AVOID_MAP = {
+  discipline: [
+    {v:'starting',     l:'Starting',         s:'The blank page, the first step'},
+    {v:'finishing',    l:'Finishing',         s:'Getting all the way to done'},
+    {v:'saying no',    l:'Saying no',         s:'Protecting your time and energy'},
+    {v:'showing up',   l:'Showing up',        s:'Consistently, without excuses'},
+  ],
+  relation: [
+    {v:'conflict',     l:'Conflict',          s:'The hard conversation you keep deferring'},
+    {v:'limits',       l:'Setting limits',    s:'What you silently allow'},
+    {v:'honesty',      l:'Full honesty',      s:'Saying what you actually mean'},
+    {v:'leaving',      l:'Leaving',           s:'Walking away from what no longer fits'},
+  ],
+  direction: [
+    {v:'deciding',     l:'Deciding',          s:'Making the call and owning it'},
+    {v:'committing',   l:'Committing',        s:'All the way in, no exits'},
+    {v:'letting go',   l:'Letting go',        s:'Of what no longer belongs'},
+    {v:'asking',       l:'Asking for help',   s:'Letting someone in'},
+  ],
+  identity: [
+    {v:'being seen',   l:'Being seen',        s:'Fully, without a filter'},
+    {v:'flaws',        l:'Your flaws',        s:'Without self-attack'},
+    {v:'standards',    l:'Your standards',    s:'For yourself and others'},
+    {v:'compassion',   l:'Self-compassion',   s:'Being kind to yourself'},
+  ],
+  mind: [
+    {v:'sitting',      l:'Sitting with it',   s:'Without solving or escaping'},
+    {v:'acting',       l:'Acting anyway',     s:'Despite uncertainty'},
+    {v:'releasing',    l:'Letting go',        s:'Of what you cannot control'},
+    {v:'trusting',     l:'Trusting yourself', s:'Your gut. Your read.'},
+  ],
+  work: [
+    {v:'hard thing',   l:'The hard thing',    s:'The task you keep deferring'},
+    {v:'asking',       l:'Asking',            s:'For what you want or need'},
+    {v:'quitting',     l:'Calling it',        s:'Admitting something is not working'},
+    {v:'starting over',l:'Starting over',     s:'Releasing sunk cost'},
+  ],
+  addiction: [
+    {v:'admitting it', l:'Admitting it',      s:'To yourself, fully, without softening'},
+    {v:'one more time',l:'The one more time', s:'The loop that keeps restarting'},
+    {v:'asking help',  l:'Asking for help',   s:'Letting someone actually in'},
+    {v:'the trigger',  l:'The trigger',       s:'What sets it off — you know what it is'},
+  ],
+  depression: [
+    {v:'getting up',   l:'Getting up',        s:'The weight of starting the day'},
+    {v:'reaching out', l:'Reaching out',      s:'When isolation feels safer'},
+    {v:'feeling it',   l:'Feeling it',        s:'Instead of going numb'},
+    {v:'small thing',  l:'One small thing',   s:'The thing that used to matter'},
+  ],
+};
+
+var ROOTS = [
+  {v:'fear',       l:'Fear',          s:'Of failure, judgment, or loss'},
+  {v:'comfort',    l:'Comfort',       s:'The familiar feels safer than the real'},
+  {v:'worthiness', l:'Worthiness',    s:'I do not deserve it yet'},
+  {v:'control',    l:'Control',       s:'Need certainty before I can move'},
+  {v:'rejection',  l:'Rejection',     s:'Protecting against being turned away'},
+  {v:'past',       l:'The past',      s:'An old story that is still running'},
+  {v:'pain',       l:'Pain',          s:'Something that has not been processed'},
+  {v:'emptiness',  l:'Emptiness',     s:'A hollow that something fills, briefly'},
+];
+
+var FOLLOWUPS = {
+  fear:       ['When did you first learn that trying meant risking something?',
+               'What is the worst realistic version of what you are afraid of here?',
+               'If fear was not part of this — what would you do first?'],
+  comfort:    ['What are you giving up by staying comfortable here?',
+               'How long have you been choosing this comfort?',
+               'What does staying comfortable actually cost you?'],
+  worthiness: ['Where did the idea come from that you are not ready yet?',
+               'What would actually being ready look like?',
+               'Who taught you to earn your place before you could act?'],
+  control:    ['What are you afraid happens if you lose control here?',
+               'What is the thing you are trying to prevent by controlling this?',
+               'Where in your life does needing control actually serve you?'],
+  rejection:  ['Whose rejection specifically are you protecting against?',
+               'What would it mean about you if you were rejected here?',
+               'Have you been through rejection before — and come out the other side?'],
+  past:       ['Which past story is running right now?',
+               'Is that story still true — or is it just familiar?',
+               'What would it cost you to stop letting that story drive?'],
+  pain:       ['When did this pain start — do you know?',
+               'Have you ever let yourself feel this fully, without cutting it short?',
+               'What are you doing with this pain when you are not looking at it?'],
+  emptiness:  ['What used to fill this space before?',
+               'What does the emptiness feel like when you sit with it — not fill it?',
+               'Is the emptiness telling you something is missing, or something needs to go?'],
+};
+
+var MOODS = [
+  {v:1, i:'😶', l:'Numb'},
+  {v:3, i:'😔', l:'Low'},
+  {v:5, i:'😐', l:'Okay'},
+  {v:7, i:'🙂', l:'Decent'},
+  {v:9, i:'✨', l:'Clear'},
+];
+
+var CLOSING = [
+  "That's enough for today. Sit with that.",
+  "You did the thing most people skip.",
+  "Go. Let it settle.",
+  "That took something. Good.",
+  "Most people never look this close.",
+  "You showed up. That matters more than you think.",
+  "This is the work. Not the easy part — the real part.",
+  "That's it for now.",
+  "You looked. That is more than most.",
+  "Hard questions. You answered them anyway.",
+];
+
+var CLOSING_SENSITIVE = [
+  "You came here. That is not small.",
+  "Looking at this honestly is the first move. You made it.",
+  "You did not run from it today. That counts.",
+  "This took courage. More than you are giving yourself credit for.",
+];
+
+var LOOP_NAMES = {
+  'fear+starting':          {name:'The Starting Block',     desc:'You see what needs doing, then find a reason the timing is not right yet.'},
+  'fear+finishing':         {name:'The Almost Loop',        desc:'You get close, then slow down. Finishing means it can be judged.'},
+  'fear+conflict':          {name:'The Peace Keeper',       desc:'You absorb tension so no one has to deal with it — including you.'},
+  'fear+deciding':          {name:'The Open Door',          desc:'Every decision closes other doors. You would rather keep them all open.'},
+  'fear+admitting it':      {name:'The Not Yet',            desc:'You are close to the full truth. Something stops you just before it.'},
+  'comfort+starting':       {name:'The Preparation Trap',   desc:'One more thing to figure out first. The start line keeps moving.'},
+  'comfort+showing up':     {name:'The Almost Ready Loop',  desc:'You know what consistent looks like. You also know why today is different.'},
+  'comfort+leaving':        {name:'The Familiar Prison',    desc:'Staying hurts. Leaving is unknown. You keep choosing the hurt you know.'},
+  'comfort+one more time':  {name:'The Last Time Loop',     desc:'This will be the last time. You have said that before. You will say it again.'},
+  'worthiness+being seen':  {name:'The Understudy',         desc:'You are ready — but you are waiting for someone to officially confirm it.'},
+  'worthiness+starting':    {name:'The Permission Waiter',  desc:'You are waiting for a signal that it is your turn. It is not coming.'},
+  'worthiness+small thing': {name:'The Minimum Door',       desc:'One small thing should be easy. The fact that it is not tells you something.'},
+  'control+deciding':       {name:'The Analyst Loop',       desc:'More information would help. It always would. The decision waits.'},
+  'control+trusting':       {name:'The Override',           desc:'Your gut says one thing. Your head finds seventeen reasons to doubt it.'},
+  'rejection+honesty':      {name:'The Soft Edit',          desc:'You say a version of the truth — the one that will not make anyone uncomfortable.'},
+  'rejection+limits':       {name:'The Yes Machine',        desc:'Saying yes is easier than the conversation that follows no.'},
+  'rejection+reaching out': {name:'The Closed Door',        desc:'You want connection. You keep the door shut just in case they do not come.'},
+  'past+conflict':          {name:'The Old Story',          desc:'The argument you are having now happened before. Maybe years ago. You are still in it.'},
+  'past+leaving':           {name:'The Anchor',             desc:'Something from before keeps you from moving forward. You know what it is.'},
+  'pain+feeling it':        {name:'The Sealed Room',        desc:'The feelings are in there. You have learned to keep the door closed.'},
+  'pain+getting up':        {name:'The Weight',             desc:'It is not laziness. Something heavy is sitting on you. You know what it is.'},
+  'emptiness+one more time':{name:'The Fill',               desc:'Something fills the emptiness for a while. Then it is back. The cycle continues.'},
+  'emptiness+reaching out': {name:'The Hollow',             desc:'You feel alone. Reaching out feels pointless — they would not understand anyway.'},
+};
+
+function getLoop(root, avoid) {
+  if (!root || !avoid) return null;
+  return LOOP_NAMES[root+'+'+avoid] || null;
+}
+
+var DEPTH_LEVELS = [
+  {min:0,  max:0,  label:'Not started',    desc:'Your first session unlocks this.'},
+  {min:0.1,max:2,  label:'Surface',        desc:'You are here. That is the beginning.'},
+  {min:2,  max:3.5,label:'Looking',        desc:'You are starting to see the shape of things.'},
+  {min:3.5,max:5,  label:'Honest',         desc:'You are not flinching from what you find.'},
+  {min:5,  max:6.5,label:'Seeing clearly', desc:'The patterns are becoming undeniable.'},
+  {min:6.5,max:8,  label:'Deep',           desc:'Most people stop before this point.'},
+  {min:8,  max:9.5,label:'Radical',        desc:'You are looking at things few people dare to name.'},
+  {min:9.5,max:10, label:'Unsparing',      desc:'This is what full self-honesty looks like.'},
+];
+
+function calcDepth(sessions) {
+  if (!sessions.length) return 0;
+  var score = 0;
+  var sessionScore = Math.min(sessions.length, 10) * 0.3
+    + Math.max(0, sessions.length - 10) * 0.05;
+  score += Math.min(sessionScore, 3);
+  var honestCount = sessions.filter(function(s){
+    return s.honesty === 'known' || s.honesty === 'buried';
+  }).length;
+  score += Math.min(honestCount * 0.4, 2);
+  var topAvoid = topOf(sessions, 'avoid');
+  if (topAvoid) {
+    var repCt = sessions.filter(function(s){return s.avoid===topAvoid;}).length;
+    if (repCt >= 5) score += 1.5;
+    else if (repCt >= 3) score += 0.8;
+  }
+  var sensitiveCount = sessions.filter(function(s){
+    return s.area === 'addiction' || s.area === 'depression';
+  }).length;
+  score += Math.min(sensitiveCount * 0.6, 1.8);
+  var wroteCount = sessions.filter(function(s){return s.write && s.write.length > 10;}).length;
+  score += Math.min(wroteCount * 0.15, 0.9);
+  var lowMoodCount = sessions.filter(function(s){return (s.mood||5) <= 3;}).length;
+  score += Math.min(lowMoodCount * 0.3, 0.9);
+  return Math.min(Math.round(score * 10) / 10, 10);
+}
+
+function getDepthLevel(score) {
+  for (var i = DEPTH_LEVELS.length - 1; i >= 0; i--) {
+    if (score >= DEPTH_LEVELS[i].min) return DEPTH_LEVELS[i];
+  }
+  return DEPTH_LEVELS[0];
+}
+
+function load() {
+  try {
+    var raw = localStorage.getItem(KEY);
+    if (!raw) return fresh();
+    return JSON.parse(raw);
+  } catch(e) { return fresh(); }
+}
+function save(d) {
+  try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e) {}
+}
+function fresh() {
+  return {sessions:[], start:today(), streak:0, lastDate:null, loopName:null};
+}
+function today() { return new Date().toISOString().slice(0,10); }
+
+function calcStreak(sessions) {
+  if (!sessions.length) return 0;
+  var seen = {}, dates = [];
+  sessions.forEach(function(s){ if(s.date && !seen[s.date]){ seen[s.date]=true; dates.push(s.date); }});
+  dates.sort().reverse();
+  var streak = 0;
+  var cursor = new Date();
+  cursor.setHours(0,0,0,0);
+  for (var i = 0; i < dates.length; i++) {
+    var d = new Date(dates[i] + 'T00:00:00');
+    var diff = Math.round((cursor - d) / 86400000);
+    if (diff === 0 || (streak === 0 && diff === 1)) {
+      streak++;
+      cursor = d;
+    } else if (diff > 1) {
+      break;
     }
+  }
+  return streak;
 }
 
-function showOptions(arr,key){
-    let opt=document.getElementById("options");
-    opt.innerHTML="";
-    arr.forEach(v=>{
-        let d=document.createElement("div");
-        d.className="option";
-        d.innerText=v;
-        d.onclick=()=>{
-            state[key]=v;
-            next();
-        };
-        opt.appendChild(d);
+function topOf(arr, key) {
+  var c = {};
+  arr.forEach(function(s){ var v=s[key]; if(v) c[v]=(c[v]||0)+1; });
+  var e = Object.entries(c).sort(function(a,b){ return b[1]-a[1]; });
+  return e.length ? e[0][0] : null;
+}
+function countBy(arr, key) {
+  var c = {};
+  arr.forEach(function(s){ var v=s[key]; if(v) c[v]=(c[v]||0)+1; });
+  return c;
+}
+function cap(s) { return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+function rnd(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function pause(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+
+var sess = {};
+function freshSess() {
+  sess = {area:null,avoid:null,root:null,followup:null,honesty:null,mood:5,write:'',date:today(),ts:0};
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  ['home','reflect','patterns'].forEach(function(n){
+    document.getElementById('nb-'+n).classList.toggle('active', id==='s-'+n);
+  });
+  document.getElementById('prog').style.display = id==='s-reflect' ? 'block' : 'none';
+  if (id !== 's-reflect') document.getElementById('tb-mid').textContent = '';
+}
+function goHome() { updateHome(); showScreen('s-home'); }
+function goPatterns() { renderPatterns(); showScreen('s-patterns'); }
+function openModal()  { document.getElementById('modal').classList.add('open'); }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+function updateHome() {
+  var d = load();
+  var sessions = d.sessions;
+  var n = sessions.length;
+
+  document.getElementById('kpi-s').textContent = n;
+  document.getElementById('kpi-k').textContent = calcStreak(sessions);
+  var top = topOf(sessions, 'avoid');
+  document.getElementById('kpi-t').textContent = top ? cap(top) : '—';
+
+  var depth = calcDepth(sessions);
+  var level = getDepthLevel(depth);
+  document.getElementById('tb-badge').textContent = 'Depth '+depth;
+  document.getElementById('depth-num').textContent = depth;
+  document.getElementById('depth-title').textContent = level.label;
+  document.getElementById('depth-sub').textContent = level.desc;
+  setTimeout(function(){
+    document.getElementById('depth-bar').style.width = (depth/10*100)+'%';
+  }, 100);
+  document.getElementById('depth-desc').textContent =
+    n === 0
+    ? 'Depth measures how honestly and consistently you look at yourself — not how many days in a row you show up.'
+    : 'Based on '+n+' session'+(n===1?'':'s')+'. Depth grows when you answer honestly, face hard areas, and let patterns surface.';
+
+  document.getElementById('mir-sess-n').textContent = n + 1;
+
+  var doneToday = sessions.some(function(s){ return s.date === today(); });
+  var bb = document.getElementById('begin-btn');
+  var db = document.getElementById('done-b');
+  if (doneToday) {
+    bb.textContent = 'Reflect again';
+    db.classList.add('show');
+    db.textContent = rnd(CLOSING);
+  } else {
+    bb.textContent = 'Begin today ↗';
+    db.classList.remove('show');
+  }
+
+  var recentSensitive = sessions.slice(-3).some(function(s){
+    return s.area === 'addiction' || s.area === 'depression';
+  });
+  document.getElementById('crisis-b').classList.toggle('show', recentSensitive);
+
+  var topR = topOf(sessions,'root'), topA = topOf(sessions,'avoid');
+  var loop = getLoop(topR, topA);
+  var loopName = d.loopName || (loop ? loop.name : null);
+  var lh = document.getElementById('loop-home');
+  if (loopName && n >= 3) {
+    lh.classList.add('show');
+    document.getElementById('loop-home-name').textContent = loopName;
+    var lct = sessions.filter(function(s){ return s.root===topR && s.avoid===topA; }).length;
+    document.getElementById('loop-home-sub').textContent = 'Showed up in '+lct+' of '+n+' sessions';
+  } else {
+    lh.classList.remove('show');
+  }
+}
+
+var convLocked = false;
+
+async function beginReflect() {
+  freshSess();
+  convLocked = false;
+  document.getElementById('conv').innerHTML = '';
+  showScreen('s-reflect');
+  updateProg(0);
+  await runConversation();
+}
+
+function updateProg(pct) {
+  document.getElementById('prog-f').style.width = pct + '%';
+  document.getElementById('tb-mid').textContent = pct > 0 ? Math.round(pct) + '% done' : '';
+}
+
+function appendMsg(cls, html) {
+  var conv = document.getElementById('conv');
+  var div = document.createElement('div');
+  div.className = 'conv-msg' + (cls ? ' '+cls : '');
+  if (html) div.innerHTML = html;
+  conv.appendChild(div);
+  requestAnimationFrame(function(){
+    setTimeout(function(){ div.classList.add('visible'); }, 30);
+  });
+  setTimeout(function(){ div.scrollIntoView({behavior:'smooth', block:'nearest'}); }, 60);
+  return div;
+}
+
+async function typeInto(el, text, spd) {
+  while (el.firstChild) el.removeChild(el.firstChild);
+  var cur = document.createElement('span');
+  cur.className = 'cur';
+  el.appendChild(cur);
+  for (var i = 0; i < text.length; i++) {
+    el.insertBefore(document.createTextNode(text[i]), cur);
+    await pause(spd || 13);
+  }
+  if (cur.parentNode) cur.parentNode.removeChild(cur);
+}
+
+async function mirrorSays(text, spd) {
+  var div = appendMsg('msg-mirror', '');
+  await pause(200);
+  await typeInto(div, text, spd || 13);
+  return div;
+}
+
+function askOpts(opts, col1) {
+  return new Promise(function(resolve) {
+    var div = appendMsg('', '');
+    var grid = document.createElement('div');
+    grid.className = 'msg-opts' + (col1 ? ' col1' : '');
+    opts.forEach(function(opt) {
+      var b = document.createElement('div');
+      b.className = 'opt';
+      var lbl = document.createElement('span');
+      lbl.className = 'opt-l';
+      lbl.textContent = opt.l;
+      b.appendChild(lbl);
+      if (opt.s) {
+        var sub = document.createElement('span');
+        sub.className = 'opt-s';
+        sub.textContent = opt.s;
+        b.appendChild(sub);
+      }
+      b.addEventListener('click', function handler() {
+        if (convLocked) return;
+        convLocked = true;
+        b.removeEventListener('click', handler);
+        grid.classList.add('opts-disabled');
+        b.classList.add('sel');
+        setTimeout(function(){ convLocked = false; resolve(opt); }, 200);
+      });
+      grid.appendChild(b);
     });
+    div.appendChild(grid);
+    setTimeout(function(){ div.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 60);
+  });
 }
 
-function toggleWrite(){
-    let input=document.getElementById("input");
-    input.style.display = input.style.display==="none" ? "block" : "none";
+function userSaid(text) { appendMsg('msg-reply', esc(text)); }
+function noteMsg(text)  { appendMsg('msg-note', esc(text)); }
+function careMsg(text)  { appendMsg('msg-care', esc(text)); }
+
+function askMood() {
+  return new Promise(function(resolve) {
+    var div = appendMsg('', '');
+    var row = document.createElement('div');
+    row.className = 'mood-row';
+    MOODS.forEach(function(m) {
+      var b = document.createElement('div');
+      b.className = 'mood-e';
+      var ico = document.createElement('span');
+      ico.className = 'mood-e-i';
+      ico.textContent = m.i;
+      var lbl = document.createElement('span');
+      lbl.className = 'mood-e-l';
+      lbl.textContent = m.l;
+      b.appendChild(ico); b.appendChild(lbl);
+      b.addEventListener('click', function handler() {
+        if (convLocked) return;
+        convLocked = true;
+        b.removeEventListener('click', handler);
+        row.querySelectorAll('.mood-e').forEach(function(x){ x.classList.remove('sel'); });
+        b.classList.add('sel');
+        setTimeout(function(){ convLocked = false; resolve(m.v); }, 200);
+      });
+      row.appendChild(b);
+    });
+    div.appendChild(row);
+    setTimeout(function(){ div.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 60);
+  });
 }
 
-// FLOW
-async function next(){
+function askWrite() {
+  return new Promise(function(resolve) {
+    var div = appendMsg('', '');
+    var wrap = document.createElement('div');
+    wrap.className = 'fw-wrap';
+    var ta = document.createElement('textarea');
+    ta.className = 'fw-area';
+    ta.placeholder = 'Write it out. Only you will see this.';
+    ta.maxLength = 600;
+    var cc = document.createElement('div');
+    cc.className = 'fw-cc';
+    cc.textContent = '0 / 600';
+    ta.addEventListener('input', function(){ cc.textContent = ta.value.length + ' / 600'; });
+    var btnRow = document.createElement('div');
+    btnRow.className = 'btn-row';
+    var doneBtn = document.createElement('button');
+    doneBtn.className = 'btn-cta';
+    doneBtn.textContent = 'Done';
+    var skipBtn = document.createElement('button');
+    skipBtn.className = 'btn-ghost';
+    skipBtn.textContent = 'Skip';
+    function finish(val) {
+      doneBtn.disabled = true;
+      skipBtn.disabled = true;
+      resolve(val);
+    }
+    doneBtn.addEventListener('click', function(){ finish(ta.value.trim()); });
+    skipBtn.addEventListener('click', function(){ finish(''); });
+    btnRow.appendChild(doneBtn); btnRow.appendChild(skipBtn);
+    wrap.appendChild(ta); wrap.appendChild(cc); wrap.appendChild(btnRow);
+    div.appendChild(wrap);
+    setTimeout(function(){ div.scrollIntoView({behavior:'smooth',block:'nearest'}); ta.focus(); }, 80);
+  });
+}
 
-if(step===0){
-    await typeText("You’re not here by accident.");
-    await pause(800);
-    await typeText("Something brought you here.");
-    showOptions(["Discipline","Overthinking","Relationship","Direction"],"area");
-    step++;
+async function runConversation() {
+  var d = load();
+  var sessions = d.sessions;
+  var n = sessions.length;
+
+  updateProg(5);
+  await pause(300);
+
+  if (n === 0) {
+    await mirrorSays("You are here. That already means something.");
+    await pause(500);
+    await mirrorSays("This is not a journal. Not a mood tracker.");
+    await pause(400);
+    await mirrorSays("It is a mirror. It shows your actual patterns — the ones underneath the explanations you give yourself.");
+    await pause(500);
+    await mirrorSays("Answer honestly. That is the only rule.");
+  } else if (n < 5) {
+    await mirrorSays("You came back.");
+    await pause(600);
+    var topA = topOf(sessions,'avoid');
+    if (topA) {
+      await mirrorSays("Last time it was "+cap(topA)+". Let us see what is here today.");
+    } else {
+      await mirrorSays("Good. Let us see what is here today.");
+    }
+  } else {
+    var streak = calcStreak(sessions);
+    var depth = calcDepth(sessions);
+    var topAv = topOf(sessions,'avoid');
+    if (depth >= 6) {
+      await mirrorSays("Depth "+depth+". You are not doing this for show anymore.");
+    } else if (streak >= 3) {
+      await mirrorSays(streak+" sessions in a row. Something in you is not running from this anymore.");
+    } else if (topAv) {
+      var ct = sessions.filter(function(s){ return s.avoid===topAv; }).length;
+      await mirrorSays(ct+" sessions and "+cap(topAv)+" keeps showing up. Let us go deeper today.");
+    } else {
+      await mirrorSays("You keep coming back. That means something is real here.");
+    }
+  }
+
+  await pause(600);
+  updateProg(14);
+
+  await mirrorSays("Where is the weight right now?");
+  await pause(200);
+  var aOpt = await askOpts(AREAS);
+  sess.area = aOpt.v;
+  userSaid(aOpt.l);
+  await pause(400);
+
+  if (SENSITIVE_AREAS[sess.area]) {
+    await pause(300);
+    if (sess.area === 'depression') {
+      careMsg("This takes honesty. If things feel very dark right now — iCall: 9152987821 is available.");
+    } else {
+      careMsg("This takes courage to look at. If you need to talk to someone — iCall: 9152987821.");
+    }
+    await pause(600);
+  }
+
+  updateProg(26);
+
+  var areaCt = sessions.filter(function(s){ return s.area===sess.area; }).length;
+  if (areaCt >= 2) {
+    await mirrorSays("You have come back to "+cap(sess.area)+" "+areaCt+" times.");
+    await pause(400);
+    await mirrorSays("Something in here keeps pulling. What is it specifically?");
+  } else if (sess.area === 'addiction') {
+    await mirrorSays("Okay. What part of this are you actually avoiding?");
+  } else if (sess.area === 'depression') {
+    await mirrorSays("Okay. What is the thing that feels hardest right now?");
+  } else {
+    await mirrorSays("In "+cap(sess.area)+" — what are you actually avoiding right now?");
+  }
+  await pause(200);
+
+  var avOpts = AVOID_MAP[sess.area] || AVOID_MAP.discipline;
+  var avOpt = await askOpts(avOpts);
+  sess.avoid = avOpt.v;
+  userSaid(avOpt.l);
+  await pause(600);
+  updateProg(40);
+
+  var avoidCt = sessions.filter(function(s){ return s.avoid===sess.avoid; }).length;
+  if (avoidCt >= 3) {
+    await mirrorSays('"'+cap(sess.avoid)+'" has come up '+avoidCt+' times now.');
+    await pause(500);
+    await mirrorSays("That is not a phase. What is really underneath it?");
+  } else if (avoidCt === 2) {
+    await mirrorSays("Second time "+cap(sess.avoid)+" has appeared.");
+    await pause(400);
+    await mirrorSays("What is the root of it?");
+  } else {
+    await mirrorSays("Okay. What is underneath that?");
+  }
+  await pause(200);
+
+  var rOpt = await askOpts(ROOTS);
+  sess.root = rOpt.v;
+  userSaid(rOpt.l);
+  await pause(700);
+  updateProg(54);
+
+  var rootCt = sessions.filter(function(s){ return s.root===sess.root; }).length;
+  if (rootCt >= 3) {
+    await mirrorSays(cap(sess.root)+" has been the answer "+rootCt+" times now.");
+    await pause(500);
+  }
+
+  var fups = FOLLOWUPS[sess.root] || [];
+  var fq = rnd(fups);
+  if (fq) {
+    await pause(300);
+    await mirrorSays(fq, 15);
+    await pause(300);
+    noteMsg("Take a moment with that.");
+    await pause(700);
+    sess.followup = fq;
+  }
+
+  updateProg(66);
+
+  await pause(600);
+  await mirrorSays("One more thing.");
+  await pause(500);
+  await mirrorSays("Be honest: is this the first time you have realised this — or have you known for a while?");
+  await pause(200);
+
+  var honOpts = [
+    {v:'new',    l:'Genuinely new',     s:'I had not seen it this clearly'},
+    {v:'known',  l:'I have known',      s:'For a while, actually'},
+    {v:'mostly', l:'Somewhere between', s:'Some of it, not all'},
+    {v:'buried', l:'I buried it',       s:'I knew and chose not to look'},
+  ];
+  var honOpt = await askOpts(honOpts);
+  sess.honesty = honOpt.v;
+  userSaid(honOpt.l);
+  await pause(600);
+
+  var honResp = {
+    new:    "Then this is a real moment. Hold it.",
+    known:  "Knowing and doing something about it are two different things. That gap is what you are here for.",
+    mostly: "The parts you already knew — those are the ones worth staying with.",
+    buried: "That takes honesty to say. You buried it and it surfaced anyway. It always does.",
+  };
+  await mirrorSays(honResp[honOpt.v] || "Good.");
+  await pause(500);
+  updateProg(77);
+
+  await pause(500);
+  await mirrorSays("How are you right now — honestly?");
+  await pause(200);
+  var moodVal = await askMood();
+  sess.mood = moodVal;
+  await pause(500);
+
+  var moodLine;
+  if (sess.area === 'depression' && moodVal <= 3) {
+    moodLine = "Low and still here. That is not nothing — that is actually something.";
+  } else if (sess.area === 'addiction' && moodVal <= 3) {
+    moodLine = "Low energy, hard topic, still looking at it. That counts.";
+  } else if (moodVal <= 3) {
+    moodLine = "Low energy and honest reflection — that is a hard combination. You did it anyway.";
+  } else if (moodVal >= 8) {
+    moodLine = "That energy — use it. Do not let this moment soften before you act.";
+  } else {
+    moodLine = "You showed up as you are. That is enough.";
+  }
+  await mirrorSays(moodLine);
+  await pause(500);
+  updateProg(88);
+
+  await pause(500);
+  await mirrorSays("Last thing.");
+  await pause(300);
+  if (sess.area === 'depression') {
+    await mirrorSays("The thing you have not been able to say to anyone. Write it here. Just for you.");
+  } else if (sess.area === 'addiction') {
+    await mirrorSays("What is the thing you keep not saying out loud about this? Write it. Just for you.");
+  } else {
+    await mirrorSays("The sentence you have not said out loud yet. Write it. Just for you.");
+  }
+  await pause(300);
+  var writeVal = await askWrite();
+  sess.write = writeVal;
+
+  await pause(600);
+  var closingPool = (SENSITIVE_AREAS[sess.area]) ? CLOSING_SENSITIVE : CLOSING;
+  var closing = rnd(closingPool);
+  var closingDiv = appendMsg('msg-done', '');
+  await typeInto(closingDiv, closing, 18);
+  await pause(800);
+  updateProg(100);
+
+  sess.date = today();
+  sess.ts = Date.now();
+  var d2 = load();
+  d2.sessions.push(Object.assign({}, sess));
+  d2.lastDate = today();
+  d2.streak = calcStreak(d2.sessions);
+  if (!d2.start) d2.start = today();
+  save(d2);
+
+  await pause(1400);
+
+  document.getElementById('mir-sess-n').textContent = d2.sessions.length;
+  renderMirror(d2);
+  showScreen('s-mirror');
+  document.getElementById('prog').style.display = 'none';
+  document.getElementById('tb-mid').textContent = '';
+  fetchInsight(d2);
+}
+
+function renderMirror(d) {
+  var sessions = d.sessions;
+  var total = sessions.length;
+  var s = sess;
+  var avoidCt = sessions.filter(function(x){ return x.avoid===s.avoid; }).length;
+  var rootCt  = sessions.filter(function(x){ return x.root===s.root; }).length;
+
+  document.getElementById('mir-stmt').innerHTML = buildStatement(s, avoidCt, rootCt, total);
+
+  var cells = document.getElementById('mir-cells');
+  cells.innerHTML = '';
+  var cellData = [
+    ['Area',     cap(s.area)],
+    ['Avoiding', cap(s.avoid)],
+    ['Root',     cap(s.root)],
+    ['Energy',   s.mood + ' / 10'],
+  ];
+  cellData.forEach(function(pair) {
+    var c = document.createElement('div');
+    c.className = 'mir-c';
+    var l = document.createElement('div'); l.className='mir-c-l'; l.textContent=pair[0];
+    var v = document.createElement('div'); v.className='mir-c-v'; v.textContent=pair[1];
+    c.appendChild(l); c.appendChild(v);
+    cells.appendChild(c);
+  });
+
+  var ib = document.getElementById('insight-block');
+  ib.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+
+  var loop = getLoop(s.root, s.avoid);
+  var lr = document.getElementById('loop-reveal');
+  if (loop && avoidCt >= 2) {
+    lr.classList.add('show');
+    var savedName = d.loopName;
+    document.getElementById('loop-reveal-name').textContent = savedName || loop.name;
+    document.getElementById('loop-reveal-desc').textContent = loop.desc;
+    document.getElementById('loop-rename-in').value = savedName || '';
+    document.getElementById('loop-rename-in').placeholder = loop.name;
+  } else {
+    lr.classList.remove('show');
+  }
+
+  var ci = document.getElementById('commit-in');
+  var cs = document.getElementById('commit-saved');
+  var cb = document.querySelector('.commit-box .btn-cta');
+  ci.value = ''; ci.disabled = false;
+  cs.style.display = 'none';
+  if (cb) cb.style.display = '';
+}
+
+function buildStatement(s, avoidCt, rootCt, total) {
+  if (total <= 1) {
+    return 'In <em>'+cap(s.area)+'</em>, you are facing <em>'+cap(s.avoid)+'</em> — rooted in <em>'+cap(s.root)+'</em>. First session. The mirror builds from here.';
+  }
+  if (avoidCt >= 3 && rootCt >= 3) {
+    return 'You have come back to <em>'+cap(s.avoid)+'</em> '+avoidCt+' times, always rooted in <em>'+cap(s.root)+'</em>. That is not bad luck. That is a loop.';
+  }
+  if (avoidCt >= 2) {
+    return '<em>'+cap(s.avoid)+'</em> keeps coming up in <em>'+cap(s.area)+'</em>. The root is still <em>'+cap(s.root)+'</em>. Same place — but you are looking at it now, which changes something.';
+  }
+  return 'Today: <em>'+cap(s.area)+'</em>, facing <em>'+cap(s.avoid)+'</em>, driven by <em>'+cap(s.root)+'</em>. After '+total+' sessions, the shape of this is becoming visible.';
+}
+
+function saveLoopName() {
+  var val = document.getElementById('loop-rename-in').value.trim();
+  if (!val) return;
+  var d = load(); d.loopName = val; save(d);
+  document.getElementById('loop-reveal-name').textContent = val;
+}
+
+function saveCommit() {
+  var val = document.getElementById('commit-in').value.trim();
+  if (!val) return;
+  var d = load();
+  if (d.sessions.length) d.sessions[d.sessions.length-1].commitment = val;
+  save(d);
+  document.getElementById('commit-in').disabled = true;
+  document.getElementById('commit-saved').style.display = 'block';
+  var cb = document.querySelector('.commit-box .btn-cta');
+  if (cb) cb.style.display = 'none';
+}
+
+async function fetchInsight(d) {
+  var block = document.getElementById('insight-block');
+  var s = sess;
+  var sessions = d.sessions;
+  var total = sessions.length;
+  var topAvoid = topOf(sessions,'avoid') || s.avoid;
+  var topRoot  = topOf(sessions,'root')  || s.root;
+
+  var history = total > 1
+    ? 'They have completed '+total+' sessions. Most repeated avoidance: "'+topAvoid
+      +'" ('+sessions.filter(function(x){ return x.avoid===topAvoid; }).length+'x). '
+      +'Most common root: "'+topRoot
+      +'" ('+sessions.filter(function(x){ return x.root===topRoot; }).length+'x).'
+    : 'First session.';
+
+  var sensitiveNote = (s.area==='addiction'||s.area==='depression')
+    ? ' This person is dealing with '+s.area+'. Be especially precise and human — no platitudes.'
+    : '';
+
+  var prompt = 'You are a mirror. Not a therapist, not a coach. You reflect what you see precisely, without softening.\n\n'
+    +history+'\n\n'
+    +'Today: area='+s.area+', avoiding='+s.avoid+', root='+s.root+', mood='+s.mood+'/10'
+    +(s.write ? ', they wrote: "'+s.write+'"' : '')
+    +(s.honesty ? ', honesty check: "'+s.honesty+'"' : '')+'.'
+    +sensitiveNote+'\n\n'
+    +'Write 2-3 sentences as the mirror speaking. Name what you see. Be specific to their data. '
+    +'Do not give advice. Do not motivate. Do not say journey. Do not say it is okay. '
+    +'Sound like a very honest perceptive friend who has been watching carefully. '
+    +'If they said they have known for a while — call that out directly. '
+    +'If a pattern is repeating — name the number. '
+    +'If area is depression or addiction — be warm but still honest, not clinical.';
+
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{role:'user', content:prompt}]
+      })
+    });
+    var data = await r.json();
+    var text = data.content && data.content[0] && data.content[0].text;
+    if (text) {
+      block.innerHTML = '';
+      await typeInto(block, text.trim(), 16);
+      var d2 = load();
+      if (d2.sessions.length) d2.sessions[d2.sessions.length-1].insight = text.trim();
+      save(d2);
+    } else {
+      block.textContent = fallbackInsight(s, sessions);
+    }
+  } catch(e) {
+    block.textContent = fallbackInsight(s, sessions);
+  }
+}
+
+function fallbackInsight(s, sessions) {
+  var ct = sessions.filter(function(x){ return x.avoid===s.avoid; }).length;
+  if (s.area === 'addiction') {
+    return 'You named it. That is further than most people get with this. The next move is not knowing more about it — you already know enough. The next move is one concrete thing.';
+  }
+  if (s.area === 'depression') {
+    return 'You came here when it would have been easier not to. That is something. The '+cap(s.root)+' underneath this — it is real, and it has been running for a while. You are looking at it now.';
+  }
+  if (ct >= 3) return 'You have named "'+cap(s.root)+'" as the root of avoiding "'+s.avoid+'" '+ct+' times now. At some point, naming it stops being insight and starts being a reason to stay still.';
+  if (s.honesty === 'known' || s.honesty === 'buried') return 'You already knew. That is the harder truth — not that you did not see it, but that you saw it and kept moving around it anyway.';
+  return 'The area is '+cap(s.area)+', the avoidance is "'+s.avoid+'", the root is '+cap(s.root)+'. That specific combination is yours. The question is what you do now that you have said it out loud.';
+}
+
+async function renderPatterns() {
+  var d = load();
+  var sessions = d.sessions;
+  var total = sessions.length;
+
+  document.getElementById('pat-n').textContent = total;
+
+  var depth = calcDepth(sessions);
+  var level = getDepthLevel(depth);
+  document.getElementById('dpat-num').textContent = depth;
+  document.getElementById('dpat-title').textContent = level.label;
+  document.getElementById('dpat-desc').textContent = level.desc;
+  document.getElementById('tb-badge').textContent = 'Depth '+depth;
+
+  render30Grid(d);
+
+  if (!total) {
+    document.getElementById('bar-avoid').style.display = 'none';
+    document.getElementById('bar-root').style.display  = 'none';
+    document.getElementById('bar-area').style.display  = 'none';
+    document.getElementById('weekly-box').classList.remove('show');
+    document.getElementById('loop-pat').classList.remove('show');
+    document.getElementById('past-list').innerHTML = '<div class="empty-st">No sessions yet.</div>';
     return;
+  }
+
+  var topA = topOf(sessions,'avoid'), topR = topOf(sessions,'root');
+  var loop = getLoop(topR, topA);
+  var lp = document.getElementById('loop-pat');
+  if (loop && total >= 3) {
+    lp.classList.add('show');
+    document.getElementById('loop-pat-name').textContent = d.loopName || loop.name;
+    document.getElementById('loop-pat-desc').textContent = loop.desc;
+  } else { lp.classList.remove('show'); }
+
+  var ac = countBy(sessions,'avoid');
+  if (Object.keys(ac).length) { document.getElementById('bar-avoid').style.display='block'; renderBars('bars-avoid',ac); }
+  var rc = countBy(sessions,'root');
+  if (Object.keys(rc).length) { document.getElementById('bar-root').style.display='block'; renderBars('bars-root',rc); }
+  var aac = countBy(sessions,'area');
+  if (Object.keys(aac).length) { document.getElementById('bar-area').style.display='block'; renderBars('bars-area',aac); }
+
+  var wb = document.getElementById('weekly-box');
+  if (total >= 3) { wb.classList.add('show'); await fetchWeekly(sessions, d); }
+  else { wb.classList.remove('show'); }
+
+  var pl = document.getElementById('past-list');
+  pl.innerHTML = '';
+  sessions.slice().reverse().slice(0,15).forEach(function(s) {
+    var dt = new Date((s.date || '') + 'T00:00:00');
+    if (isNaN(dt.getTime())) dt = new Date(s.ts || Date.now());
+    var ds = dt.toLocaleDateString('en-IN', {weekday:'short',day:'numeric',month:'short'});
+    var card = document.createElement('div');
+    card.className = 'past-card';
+    var dd = document.createElement('div'); dd.className='past-d'; dd.textContent=ds;
+    var tt = document.createElement('div'); tt.className='past-t';
+    tt.innerHTML = '<strong>'+esc(cap(s.area||'—'))+'</strong> — faced <em>'
+      +esc(cap(s.avoid||'—'))+'</em>, rooted in <em>'+esc(cap(s.root||'—'))+'</em>'
+      +(s.mood ? ' &middot; Energy: '+s.mood+'/10' : '');
+    card.appendChild(dd); card.appendChild(tt);
+    if (s.write) {
+      var wr = document.createElement('div'); wr.className='past-write'; wr.textContent='"'+s.write+'"';
+      card.appendChild(wr);
+    }
+    if (s.insight) {
+      var ins = document.createElement('div'); ins.className='past-insight'; ins.textContent=s.insight;
+      card.appendChild(ins);
+    }
+    if (s.commitment) {
+      var tag = document.createElement('span'); tag.className='past-tag'; tag.textContent=s.commitment;
+      card.appendChild(tag);
+    }
+    pl.appendChild(card);
+  });
 }
 
-if(step===1){
-    await typeText("What did you avoid?");
-    showOptions(["Decision","Conversation","Action","Truth"],"avoid");
-    step++;
-    return;
+function render30Grid(d) {
+  var grid = document.getElementById('grid30');
+  grid.innerHTML = '';
+  var t = today();
+  var startDate = new Date((d.start || t) + 'T00:00:00');
+  var done = {};
+  d.sessions.forEach(function(s){ if (s.date) done[s.date] = true; });
+  for (var i = 0; i < 30; i++) {
+    var dt = new Date(startDate);
+    dt.setDate(dt.getDate() + i);
+    var ds = dt.toISOString().slice(0,10);
+    var wrap = document.createElement('div');
+    var gd = document.createElement('div');
+    gd.className = 'gd'+(done[ds]?' done':'')+(ds===t?' today':'')+(ds>t?' future':'');
+    gd.title = 'Session '+(i+1)+(done[ds]?' (done)':'');
+    var gn = document.createElement('div');
+    gn.className = 'gd-n';
+    gn.textContent = i+1;
+    wrap.appendChild(gd); wrap.appendChild(gn);
+    grid.appendChild(wrap);
+  }
 }
 
-if(step===2){
-    await typeText("Why?");
-    showOptions(["Fear","Comfort","Uncertainty","Rejection"],"why");
-    step++;
-    return;
+function renderBars(cid, counts) {
+  var el = document.getElementById(cid);
+  el.innerHTML = '';
+  var vals = Object.values(counts);
+  var max = vals.length ? Math.max.apply(null, vals) : 1;
+  Object.entries(counts).sort(function(a,b){ return b[1]-a[1]; }).forEach(function(pair) {
+    var row = document.createElement('div'); row.className='bar-item';
+    var lbl = document.createElement('span'); lbl.className='bar-item-l'; lbl.textContent=cap(pair[0]);
+    var trk = document.createElement('div'); trk.className='bar-track';
+    var fil = document.createElement('div'); fil.className='bar-fill'; fil.dataset.w=String(pair[1]/max*100);
+    var ct  = document.createElement('span'); ct.className='bar-ct'; ct.textContent=pair[1];
+    trk.appendChild(fil); row.appendChild(lbl); row.appendChild(trk); row.appendChild(ct);
+    el.appendChild(row);
+  });
+  requestAnimationFrame(function(){
+    el.querySelectorAll('.bar-fill').forEach(function(b){ b.style.width = b.dataset.w+'%'; });
+  });
 }
 
-// PROCESS
-document.getElementById("options").innerHTML="";
+async function fetchWeekly(sessions, d) {
+  var el = document.getElementById('weekly-text');
+  el.textContent = '...';
+  var topA = topOf(sessions,'avoid');
+  var topR = topOf(sessions,'root');
+  var avgMood = (sessions.reduce(function(a,s){ return a+(s.mood||5); },0)/sessions.length).toFixed(1);
+  var depth = calcDepth(sessions);
+  var hasSensitive = sessions.some(function(s){ return s.area==='addiction'||s.area==='depression'; });
 
-await typeText(`You avoided ${state.avoid}.\n\nBecause of ${state.why}.`);
-await pause(1000);
+  var prompt = 'You are an honest observer. In 2 sentences, say what this person\'s data reveals — no advice, no softening, just reflection.'
+    + (hasSensitive ? ' They have reflected on addiction or depression. Be human, not clinical.' : '')
+    + '\n\nData: '+sessions.length+' sessions. '
+    + 'Most avoided: "'+topA+'" ('+sessions.filter(function(s){ return s.avoid===topA; }).length+'x). '
+    + 'Most common root: "'+topR+'" ('+sessions.filter(function(s){ return s.root===topR; }).length+'x). '
+    + 'Average mood: '+avgMood+'/10. Depth score: '+depth+'/10.';
 
-await typeText("This isn’t new.");
-await pause(1200);
-
-await typeText("When it matters...\nyou step back.");
-await pause(1400);
-
-await typeText("If nothing changes...\nthis becomes you.");
-await pause(1500);
-
-await typeText("You already know what needs to happen.");
-await pause(1200);
-
-// DECISION
-showOptions(["Act","Ignore"],"decision");
-
-document.querySelectorAll(".option").forEach(btn=>{
-    btn.onclick = async ()=>{
-        document.getElementById("options").innerHTML="";
-
-        if(btn.innerText==="Act"){
-            await typeText("Then do it.\n\nBefore your mind softens this moment.");
-        } else {
-            await typeText("Then this repeats.\n\nExactly like before.");
-        }
-
-        await pause(1500);
-
-        await typeText("This moment will come back.\n\nWill you be different when it does?");
-        
-        await pause(1500);
-
-        // FINAL OPTIONS
-        showOptions(["Face it again","Go deeper"],"final");
-
-        document.querySelectorAll(".option").forEach(f=>{
-            f.onclick=()=>{
-                if(f.innerText==="Face it again"){
-                    location.reload();
-                } else {
-                    toggleWrite();
-                }
-            };
-        });
-    };
-});
+  try {
+    var r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{role:'user', content:prompt}]
+      })
+    });
+    var data = await r.json();
+    var t = data.content && data.content[0] && data.content[0].text;
+    el.textContent = t ? t.trim() : 'Most repeated avoidance: "'+topA+'". Most common root: "'+topR+'". That loop keeps showing up.';
+  } catch(e) {
+    el.textContent = 'Most repeated avoidance: "'+topA+'". Most common root: "'+topR+'". That combination is the pattern.';
+  }
 }
 
-// start
-next();
+function resetAll() {
+  if (!confirm('Delete everything and start over?')) return;
+  localStorage.removeItem(KEY);
+  closeModal();
+  goHome();
+}
+
+updateHome();
 </script>
-
 </body>
 </html>
+```
