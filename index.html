@@ -1,5 +1,3 @@
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -103,7 +101,7 @@ body::after{
 }
 .done-b.show{display:block;}
 
-/* DEPTH SCORE */
+/* DEPTH SCORE — the new centrepiece */
 .depth-card{
   margin-top:36px;padding:24px;
   border:1px solid var(--b2);border-radius:var(--r);background:var(--s1);
@@ -139,6 +137,7 @@ body::after{
 .loop-home-name{font-size:20px;color:var(--ink);}
 .loop-home-sub{font-family:var(--m);font-size:11px;color:var(--ink3);margin-top:4px;}
 
+/* CRISIS BANNER — shown for depression/addiction areas */
 .crisis-b{
   display:none;padding:14px 18px;border-radius:var(--r);
   background:rgba(217,107,107,0.08);border:1px solid rgba(217,107,107,0.2);
@@ -192,6 +191,8 @@ body::after{
 .opt.sel .opt-l{color:var(--ink);}
 .opt.sel::before{transform:scaleY(1);}
 .opts-disabled .opt:not(.sel){opacity:.3;pointer-events:none;}
+
+/* sensitive area options get a softer style */
 .opt.sensitive{border-color:rgba(200,169,107,0.15);}
 
 .msg-reply{
@@ -202,6 +203,7 @@ body::after{
 .msg-fup{font-size:18px;line-height:1.7;color:var(--ink2);}
 .msg-note{font-family:var(--m);font-size:11px;color:var(--ink3);letter-spacing:.04em;}
 
+/* crisis note inside conversation */
 .msg-care{
   font-size:15px;line-height:1.7;color:rgba(237,200,200,0.75);
   padding:14px 18px;background:rgba(217,107,107,0.07);
@@ -312,6 +314,7 @@ body::after{
 .pat-title{font-size:clamp(28px,7vw,42px);font-weight:400;margin-bottom:6px;}
 .pat-sub{font-family:var(--m);font-size:11px;color:var(--ink3);letter-spacing:.08em;margin-bottom:36px;}
 
+/* depth on patterns page */
 .depth-pat{
   padding:20px 22px;border:1px solid var(--b2);border-radius:var(--r);
   background:var(--s1);margin-bottom:32px;
@@ -416,6 +419,7 @@ body::after{
   <button class="btn-cta" id="begin-btn" onclick="beginReflect()">Begin today ↗</button>
   <button class="btn-ghost" onclick="goPatterns()">My patterns</button>
 
+  <!-- DEPTH SCORE CARD -->
   <div class="depth-card" id="depth-card">
     <div class="depth-card-top">
       <div>
@@ -545,8 +549,12 @@ body::after{
 </div>
 
 <script>
+// ═══════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════
 var KEY = 'mirror_v6';
 
+// Areas — now includes addiction and depression
 var AREAS = [
   {v:'discipline', l:'Discipline',   s:'Focus, habits, follow-through'},
   {v:'relation',   l:'Relationship', s:'People, conflict, connection'},
@@ -558,6 +566,7 @@ var AREAS = [
   {v:'depression', l:'Depression',   s:'Heaviness, absence, low flame'},
 ];
 
+// Sensitive areas that show support resources
 var SENSITIVE_AREAS = {addiction:true, depression:true};
 
 var AVOID_MAP = {
@@ -577,7 +586,7 @@ var AVOID_MAP = {
     {v:'deciding',     l:'Deciding',          s:'Making the call and owning it'},
     {v:'committing',   l:'Committing',        s:'All the way in, no exits'},
     {v:'letting go',   l:'Letting go',        s:'Of what no longer belongs'},
-    {v:'asking',       l:'Asking for help',   s:'Letting someone in'},
+    {v:'asking-help',  l:'Asking for help',   s:'Letting someone in'},
   ],
   identity: [
     {v:'being seen',   l:'Being seen',        s:'Fully, without a filter'},
@@ -611,51 +620,106 @@ var AVOID_MAP = {
   ],
 };
 
-var ROOTS = [
-  {v:'fear',       l:'Fear',          s:'Of failure, judgment, or loss'},
-  {v:'comfort',    l:'Comfort',       s:'The familiar feels safer than the real'},
-  {v:'worthiness', l:'Worthiness',    s:'I do not deserve it yet'},
-  {v:'control',    l:'Control',       s:'Need certainty before I can move'},
-  {v:'rejection',  l:'Rejection',     s:'Protecting against being turned away'},
-  {v:'past',       l:'The past',      s:'An old story that is still running'},
-  {v:'pain',       l:'Pain',          s:'Something that has not been processed'},
-  {v:'emptiness',  l:'Emptiness',     s:'A hollow that something fills, briefly'},
-];
+function getRoots(n) {
+  var FS=['Of failure, judgment, or loss','Of what comes next','Of what trying reveals'];
+  var CS=['The familiar feels safer than the real','The known over the unknown','Staying is easier than changing'];
+  var WS=['I do not deserve it yet','Not ready, not enough','Still waiting to earn this'];
+  var KS=['Need certainty before I can move','Cannot start without knowing how it ends','Managing the outcome'];
+  var RS=['Protecting against being turned away','The shield against no','Afraid of what rejection means'];
+  var PS=['An old story that is still running','Something from before driving now','The past in the present'];
+  var NS=['Something that has not been processed','Unfinished feeling','Still raw'];
+  var ES=['A hollow that something fills, briefly','Missing piece','The absence of something'];
+  return [
+    {v:'fear',       l:'Fear',          s:FS[n%FS.length]},
+    {v:'comfort',    l:'Comfort',       s:CS[n%CS.length]},
+    {v:'worthiness', l:'Worthiness',    s:WS[n%WS.length]},
+    {v:'control',    l:'Control',       s:KS[n%KS.length]},
+    {v:'rejection',  l:'Rejection',     s:RS[n%RS.length]},
+    {v:'past',       l:'The past',      s:PS[n%PS.length]},
+    {v:'pain',       l:'Pain',          s:NS[n%NS.length]},
+    {v:'emptiness',  l:'Emptiness',     s:ES[n%ES.length]},
+  ];
+}
+var ROOTS = getRoots(0);
 
 var FOLLOWUPS = {
-  fear:       ['When did you first learn that trying meant risking something?',
-               'What is the worst realistic version of what you are afraid of here?',
-               'If fear was not part of this — what would you do first?'],
-  comfort:    ['What are you giving up by staying comfortable here?',
-               'How long have you been choosing this comfort?',
-               'What does staying comfortable actually cost you?'],
-  worthiness: ['Where did the idea come from that you are not ready yet?',
-               'What would actually being ready look like?',
-               'Who taught you to earn your place before you could act?'],
-  control:    ['What are you afraid happens if you lose control here?',
-               'What is the thing you are trying to prevent by controlling this?',
-               'Where in your life does needing control actually serve you?'],
-  rejection:  ['Whose rejection specifically are you protecting against?',
-               'What would it mean about you if you were rejected here?',
-               'Have you been through rejection before — and come out the other side?'],
-  past:       ['Which past story is running right now?',
-               'Is that story still true — or is it just familiar?',
-               'What would it cost you to stop letting that story drive?'],
-  pain:       ['When did this pain start — do you know?',
-               'Have you ever let yourself feel this fully, without cutting it short?',
-               'What are you doing with this pain when you are not looking at it?'],
-  emptiness:  ['What used to fill this space before?',
-               'What does the emptiness feel like when you sit with it — not fill it?',
-               'Is the emptiness telling you something is missing, or something needs to go?'],
+  fear:       [
+    'When did you first learn that trying meant risking something?',
+    'What is the worst realistic version of what you are afraid of here?',
+    'If fear was not part of this — what would you do first?',
+    'What specifically are you afraid of losing if you move forward?',
+    'Where in your body does this fear actually live right now?',
+    'What would you tell someone else who had this exact fear?',
+  ],
+  comfort:    [
+    'What are you giving up by staying comfortable here?',
+    'How long have you been choosing this comfort?',
+    'What does staying comfortable actually cost you?',
+    'What is the uncomfortable version of this situation that you keep avoiding?',
+    'When did comfort become more important than the thing you actually want?',
+    'If you removed the comfort option entirely — what would you do?',
+  ],
+  worthiness: [
+    'Where did the idea come from that you are not ready yet?',
+    'What would actually being ready look like?',
+    'Who taught you to earn your place before you could act?',
+    'What is the version of yourself that you are waiting to become before you allow this?',
+    'If someone you respected had this exact same doubt about themselves — what would you say to them?',
+    'What has to happen before you decide you are enough to do this?',
+  ],
+  control:    [
+    'What are you afraid happens if you lose control here?',
+    'What is the thing you are trying to prevent by controlling this?',
+    'Where in your life does needing control actually serve you?',
+    'What is the last decision you made without all the information — and how did it go?',
+    'What would you do right now if uncertainty was not a reason to wait?',
+    'Who would you be if you stopped needing to manage how this turns out?',
+  ],
+  rejection:  [
+    'Whose rejection specifically are you protecting against?',
+    'What would it mean about you if you were rejected here?',
+    'Have you been through rejection before — and come out the other side?',
+    'What is the story you tell yourself about what rejection says about your worth?',
+    'What have you not done or said specifically because of this fear of no?',
+    'If the rejection happened — what is the actual worst version of what follows?',
+  ],
+  past:       [
+    'Which past story is running right now?',
+    'Is that story still true — or is it just familiar?',
+    'What would it cost you to stop letting that story drive?',
+    'How old were you when that story was written? Is that version of you still the one making decisions?',
+    'What evidence do you have that the past version is still accurate now?',
+    'If you let go of that story — what is left? What would you be without it?',
+  ],
+  pain:       [
+    'When did this pain start — do you know?',
+    'Have you ever let yourself feel this fully, without cutting it short?',
+    'What are you doing with this pain when you are not looking at it?',
+    'What would it mean about you if you sat with this without fixing it?',
+    'Who knows about this pain? If no one — what has kept it private?',
+    'What do you think would happen if you actually let yourself feel the full weight of this?',
+  ],
+  emptiness:  [
+    'What used to fill this space before?',
+    'What does the emptiness feel like when you sit with it — not fill it?',
+    'Is the emptiness telling you something is missing, or something needs to go?',
+    'When did you first notice it? What was happening in your life then?',
+    'What do you fill it with — and how long does that last?',
+    'What is the thing you are most afraid the emptiness means about you?',
+  ],
 };
 
-var MOODS = [
-  {v:1, i:'😶', l:'Numb'},
-  {v:3, i:'😔', l:'Low'},
-  {v:5, i:'😐', l:'Okay'},
-  {v:7, i:'🙂', l:'Decent'},
-  {v:9, i:'✨', l:'Clear'},
-];
+function getMoods(n) {
+  var NL=['Numb','Empty','Flat','Absent'];
+  var LL=['Low','Heavy','Hard','Down'];
+  var OL=['Okay','Getting by','So-so','Neutral'];
+  var DL=['Decent','Alright','Okay-ish','Not bad'];
+  var CL=['Clear','Good','Light','Present'];
+  return [{v:1,i:'😶',l:NL[n%NL.length]},{v:3,i:'😔',l:LL[n%LL.length]},
+          {v:5,i:'😐',l:OL[n%OL.length]},{v:7,i:'🙂',l:DL[n%DL.length]},
+          {v:9,i:'✨',l:CL[n%CL.length]}];
+}
+var MOODS = getMoods(0);
 
 var CLOSING = [
   "That's enough for today. Sit with that.",
@@ -668,81 +732,116 @@ var CLOSING = [
   "That's it for now.",
   "You looked. That is more than most.",
   "Hard questions. You answered them anyway.",
+  "Now go do something with it.",
+  "The looking is step one. You did it.",
+  "You came, you looked, you named it. That is enough.",
+  "Sit with it before you explain it away.",
+  "Do not let your mind soften this before it lands.",
 ];
 
+// Depression/addiction specific closing lines — expanded pool
 var CLOSING_SENSITIVE = [
   "You came here. That is not small.",
   "Looking at this honestly is the first move. You made it.",
   "You did not run from it today. That counts.",
   "This took courage. More than you are giving yourself credit for.",
+  "You looked at a hard thing. Go sit with it.",
+  "That was real. Let it be real for a while before you explain it away.",
+  "The hardest sessions are the ones that matter most. This was one of them.",
+  "You showed up when it was easier not to. That says something about you.",
 ];
 
+// Loop namer — ACT cognitive defusion
+// Each loop has 3 rotating descriptions so it never reads the same twice
 var LOOP_NAMES = {
-  'fear+starting':          {name:'The Starting Block',     desc:'You see what needs doing, then find a reason the timing is not right yet.'},
-  'fear+finishing':         {name:'The Almost Loop',        desc:'You get close, then slow down. Finishing means it can be judged.'},
-  'fear+conflict':          {name:'The Peace Keeper',       desc:'You absorb tension so no one has to deal with it — including you.'},
-  'fear+deciding':          {name:'The Open Door',          desc:'Every decision closes other doors. You would rather keep them all open.'},
-  'fear+admitting it':      {name:'The Not Yet',            desc:'You are close to the full truth. Something stops you just before it.'},
-  'comfort+starting':       {name:'The Preparation Trap',   desc:'One more thing to figure out first. The start line keeps moving.'},
-  'comfort+showing up':     {name:'The Almost Ready Loop',  desc:'You know what consistent looks like. You also know why today is different.'},
-  'comfort+leaving':        {name:'The Familiar Prison',    desc:'Staying hurts. Leaving is unknown. You keep choosing the hurt you know.'},
-  'comfort+one more time':  {name:'The Last Time Loop',     desc:'This will be the last time. You have said that before. You will say it again.'},
-  'worthiness+being seen':  {name:'The Understudy',         desc:'You are ready — but you are waiting for someone to officially confirm it.'},
-  'worthiness+starting':    {name:'The Permission Waiter',  desc:'You are waiting for a signal that it is your turn. It is not coming.'},
-  'worthiness+small thing': {name:'The Minimum Door',       desc:'One small thing should be easy. The fact that it is not tells you something.'},
-  'control+deciding':       {name:'The Analyst Loop',       desc:'More information would help. It always would. The decision waits.'},
-  'control+trusting':       {name:'The Override',           desc:'Your gut says one thing. Your head finds seventeen reasons to doubt it.'},
-  'rejection+honesty':      {name:'The Soft Edit',          desc:'You say a version of the truth — the one that will not make anyone uncomfortable.'},
-  'rejection+limits':       {name:'The Yes Machine',        desc:'Saying yes is easier than the conversation that follows no.'},
-  'rejection+reaching out': {name:'The Closed Door',        desc:'You want connection. You keep the door shut just in case they do not come.'},
-  'past+conflict':          {name:'The Old Story',          desc:'The argument you are having now happened before. Maybe years ago. You are still in it.'},
-  'past+leaving':           {name:'The Anchor',             desc:'Something from before keeps you from moving forward. You know what it is.'},
-  'pain+feeling it':        {name:'The Sealed Room',        desc:'The feelings are in there. You have learned to keep the door closed.'},
-  'pain+getting up':        {name:'The Weight',             desc:'It is not laziness. Something heavy is sitting on you. You know what it is.'},
-  'emptiness+one more time':{name:'The Fill',               desc:'Something fills the emptiness for a while. Then it is back. The cycle continues.'},
-  'emptiness+reaching out': {name:'The Hollow',             desc:'You feel alone. Reaching out feels pointless — they would not understand anyway.'},
+  'fear+starting':          {name:'The Starting Block',    descs:['You see what needs doing, then find a reason the timing is not right yet.','The start line keeps moving because once you start, you can fail. That is what this is about.','Ready is a feeling you are waiting for. It is not coming before you start.']},
+  'fear+finishing':         {name:'The Almost Loop',       descs:['You get close, then slow down. Finishing means it can be judged.','The last step is the hardest because it is the most visible. That is the fear.','Getting to done means losing the protection of in-progress.']},
+  'fear+conflict':          {name:'The Peace Keeper',      descs:['You absorb tension so no one has to deal with it — including you.','Keeping the peace is a way of avoiding the discomfort of what happens if you stop.','The conversation keeps not happening because you manage the environment instead.']},
+  'fear+deciding':          {name:'The Open Door',         descs:['Every decision closes other doors. You would rather keep them all open.','The decision is not hard. The permanence of deciding is what stops it.','Open options feel like safety. They are actually a different kind of stuck.']},
+  'fear+admitting it':      {name:'The Not Yet',           descs:['You are close to the full truth. Something stops you just before it.','The admission keeps almost happening. Almost is where you live.','You know the thing. Saying it fully makes it real in a way that cannot be undone.']},
+  'comfort+starting':       {name:'The Preparation Trap',  descs:['One more thing to figure out first. The start line keeps moving.','The preparation is real. It is also a reason not to start.','Ready never fully arrives. That is the trap.']},
+  'comfort+showing up':     {name:'The Almost Ready Loop', descs:['You know what consistent looks like. You also know why today is different.','The intention is real. The follow-through keeps getting interrupted by real reasons.','Showing up once is easy. The loop is in what happens on the second day.']},
+  'comfort+leaving':        {name:'The Familiar Prison',   descs:['Staying hurts. Leaving is unknown. You keep choosing the hurt you know.','The known pain beats the unknown possibility. That is the trade you keep making.','You have mapped the hurt here. The hurt on the other side is uncharted.']},
+  'comfort+one more time':  {name:'The Last Time Loop',    descs:['This will be the last time. You have said that before. You will say it again.','The last time loop runs because the alternative is the harder thing.','Each time is genuinely going to be the last time. Until the next one.']},
+  'worthiness+being seen':  {name:'The Understudy',        descs:['You are ready — but you are waiting for someone to officially confirm it.','The confirmation is not coming from outside. It never was.','You perform readiness. The actual move waits for permission that is not yours to give away.']},
+  'worthiness+starting':    {name:'The Permission Waiter', descs:['You are waiting for a signal that it is your turn. It is not coming.','Permission has been outsourced to someone who does not know they hold it.','The right moment, the right conditions, the right signal. Still waiting.']},
+  'worthiness+small thing': {name:'The Minimum Door',      descs:['One small thing should be easy. The fact that it is not tells you something.','The small thing is not small. It is the door to the larger thing.','If you cannot do the small version, it is not about the size of the task.']},
+  'control+deciding':       {name:'The Analyst Loop',      descs:['More information would help. It always would. The decision waits.','Analysis is a legitimate reason to delay. The loop knows this.','Certainty would help. It is not available. The research continues anyway.']},
+  'control+trusting':       {name:'The Override',          descs:['Your gut says one thing. Your head finds seventeen reasons to doubt it.','The override runs on a pattern: feel something clearly, then immediately complicate it.','Trusting yourself requires tolerating the risk of being wrong. That is the actual blocker.']},
+  'rejection+honesty':      {name:'The Soft Edit',         descs:['You say a version of the truth — the one that will not make anyone uncomfortable.','The edit happens fast, before you notice. What comes out is already the managed version.','The full truth and the spoken truth are not the same. The gap is this loop.']},
+  'rejection+limits':       {name:'The Yes Machine',       descs:['Saying yes is easier than the conversation that follows no.','The limit keeps not being set because the cost of setting it feels too high.','You absorb what should be refused. The yes protects against having to manage someone else reaction.']},
+  'rejection+reaching out': {name:'The Closed Door',       descs:['You want connection. You keep the door shut just in case they do not come.','The reaching out keeps not happening because the risk of no response feels worse than the current distance.','The door is closed from the inside.']},
+  'past+conflict':          {name:'The Old Story',         descs:['The argument you are having now happened before. Maybe years ago. You are still in it.','The current situation is running on old software.','This conflict is newer than the story behind it.']},
+  'past+leaving':           {name:'The Anchor',            descs:['Something from before keeps you from moving forward. You know what it is.','The past has a physical weight in the present. That is what an anchor does.','Not ready to move because leaving means leaving that too.']},
+  'pain+feeling it':        {name:'The Sealed Room',       descs:['The feelings are in there. You have learned to keep the door closed.','The sealing happened gradually. It made sense at the time.','The room is still there. The door is still there. So is what is inside it.']},
+  'pain+getting up':        {name:'The Weight',            descs:['It is not laziness. Something heavy is sitting on you. You know what it is.','The weight is specific. Laziness is not specific.','Getting up is the first thing. The weight makes the first thing the hardest thing.']},
+  'emptiness+one more time':{name:'The Fill',              descs:['Something fills the emptiness for a while. Then it is back. The cycle continues.','The fill works. Temporarily. The return of the empty is the loop.','What fills it changes. The emptiness is consistent.']},
+  'emptiness+reaching out': {name:'The Hollow',            descs:['You feel alone. Reaching out feels pointless — they would not understand anyway.','The hollow creates its own logic: no one can reach it, so no one should try.','The isolation and the emptiness feed each other.']},
 };
+function getLoopDesc(loop, avoidCt) {
+  if (!loop) return '';
+  var descs = loop.descs || [loop.desc || ''];
+  return descs[(avoidCt - 1) % descs.length];
+}
 
 function getLoop(root, avoid) {
   if (!root || !avoid) return null;
   return LOOP_NAMES[root+'+'+avoid] || null;
 }
 
+// ── DEPTH SCORE SYSTEM ──
+// Not about days. About honesty quality + pattern repetition + showing up at all.
 var DEPTH_LEVELS = [
-  {min:0,  max:0,  label:'Not started',    desc:'Your first session unlocks this.'},
-  {min:0.1,max:2,  label:'Surface',        desc:'You are here. That is the beginning.'},
-  {min:2,  max:3.5,label:'Looking',        desc:'You are starting to see the shape of things.'},
-  {min:3.5,max:5,  label:'Honest',         desc:'You are not flinching from what you find.'},
-  {min:5,  max:6.5,label:'Seeing clearly', desc:'The patterns are becoming undeniable.'},
-  {min:6.5,max:8,  label:'Deep',           desc:'Most people stop before this point.'},
-  {min:8,  max:9.5,label:'Radical',        desc:'You are looking at things few people dare to name.'},
-  {min:9.5,max:10, label:'Unsparing',      desc:'This is what full self-honesty looks like.'},
+  {min:0,  max:0,  label:'Not started',    descs:['Your first session unlocks this.']},
+  {min:0.1,max:2,  label:'Surface',        descs:['You are here. That is the beginning.','First sessions. The mirror is warming up.','You started. Most people do not.']},
+  {min:2,  max:3.5,label:'Looking',        descs:['You are starting to see the shape of things.','Something is becoming visible.','The picture is forming.']},
+  {min:3.5,max:5,  label:'Honest',         descs:['You are not flinching from what you find.','You are staying with what comes up.','The honesty is real now.']},
+  {min:5,  max:6.5,label:'Seeing clearly', descs:['The patterns are becoming undeniable.','You can see the loop clearly now.','The shape of this is visible.']},
+  {min:6.5,max:8,  label:'Deep',           descs:['Most people stop before this point.','You went past where most people turn back.','This depth is rare.']},
+  {min:8,  max:9.5,label:'Radical',        descs:['You are looking at things few people dare to name.','This is the kind of honesty most people avoid their whole lives.','Almost unsparing.']},
+  {min:9.5,max:10, label:'Unsparing',      descs:['This is what full self-honesty looks like.','You are not protecting yourself from anything anymore.','The mirror is fully clear.']},
 ];
+function getDepthDesc(level, sessionCount) {
+  var descs = level.descs || [level.desc || ''];
+  return descs[sessionCount % descs.length];
+}
 
 function calcDepth(sessions) {
   if (!sessions.length) return 0;
   var score = 0;
+  // Base: 1 point per session, diminishing after 10
   var sessionScore = Math.min(sessions.length, 10) * 0.3
     + Math.max(0, sessions.length - 10) * 0.05;
   score += Math.min(sessionScore, 3);
+
+  // Honesty bonus: "known" and "buried" answers show deeper honesty
   var honestCount = sessions.filter(function(s){
     return s.honesty === 'known' || s.honesty === 'buried';
   }).length;
   score += Math.min(honestCount * 0.4, 2);
+
+  // Repetition insight: same pattern appearing 3+ times = recognition
   var topAvoid = topOf(sessions, 'avoid');
   if (topAvoid) {
     var repCt = sessions.filter(function(s){return s.avoid===topAvoid;}).length;
     if (repCt >= 5) score += 1.5;
     else if (repCt >= 3) score += 0.8;
   }
+
+  // Sensitive area courage bonus
   var sensitiveCount = sessions.filter(function(s){
     return s.area === 'addiction' || s.area === 'depression';
   }).length;
   score += Math.min(sensitiveCount * 0.6, 1.8);
+
+  // Wrote something bonus
   var wroteCount = sessions.filter(function(s){return s.write && s.write.length > 10;}).length;
   score += Math.min(wroteCount * 0.15, 0.9);
+
+  // Low mood but showed up bonus — most courageous act
   var lowMoodCount = sessions.filter(function(s){return (s.mood||5) <= 3;}).length;
   score += Math.min(lowMoodCount * 0.3, 0.9);
+
   return Math.min(Math.round(score * 10) / 10, 10);
 }
 
@@ -753,6 +852,9 @@ function getDepthLevel(score) {
   return DEPTH_LEVELS[0];
 }
 
+// ═══════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════
 function load() {
   try {
     var raw = localStorage.getItem(KEY);
@@ -761,15 +863,33 @@ function load() {
   } catch(e) { return fresh(); }
 }
 function save(d) {
-  try { localStorage.setItem(KEY, JSON.stringify(d)); } catch(e) {}
+  try {
+    localStorage.setItem(KEY, JSON.stringify(d));
+  } catch(e) {
+    // Storage full — keep most recent 20 sessions and retry
+    try {
+      if (d.sessions && d.sessions.length > 20) {
+        var slim = Object.assign({}, d, {sessions: d.sessions.slice(-20)});
+        localStorage.setItem(KEY, JSON.stringify(slim));
+      }
+    } catch(e2) { /* truly full — cannot save */ }
+  }
 }
 function fresh() {
   return {sessions:[], start:today(), streak:0, lastDate:null, loopName:null};
 }
-function today() { return new Date().toISOString().slice(0,10); }
+function today() {
+  // Use local date not UTC — avoids late-night sessions showing as tomorrow
+  var d = new Date();
+  var y = d.getFullYear();
+  var m = String(d.getMonth()+1).padStart(2,'0');
+  var day = String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
 
 function calcStreak(sessions) {
   if (!sessions.length) return 0;
+  // Deduplicate dates, sort descending
   var seen = {}, dates = [];
   sessions.forEach(function(s){ if(s.date && !seen[s.date]){ seen[s.date]=true; dates.push(s.date); }});
   dates.sort().reverse();
@@ -779,10 +899,10 @@ function calcStreak(sessions) {
   for (var i = 0; i < dates.length; i++) {
     var d = new Date(dates[i] + 'T00:00:00');
     var diff = Math.round((cursor - d) / 86400000);
-    if (diff === 0 || (streak === 0 && diff === 1)) {
+    if (diff === 0 || diff === 1) {
       streak++;
       cursor = d;
-    } else if (diff > 1) {
+    } else {
       break;
     }
   }
@@ -811,11 +931,17 @@ function esc(s) {
 function rnd(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
 function pause(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
 
+// ═══════════════════════════════════════════════
+// SESSION STATE
+// ═══════════════════════════════════════════════
 var sess = {};
 function freshSess() {
   sess = {area:null,avoid:null,root:null,followup:null,honesty:null,mood:5,write:'',date:today(),ts:0};
 }
 
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById(id).classList.add('active');
@@ -831,6 +957,9 @@ function goPatterns() { renderPatterns(); showScreen('s-patterns'); }
 function openModal()  { document.getElementById('modal').classList.add('open'); }
 function closeModal() { document.getElementById('modal').classList.remove('open'); }
 
+// ═══════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════
 function updateHome() {
   var d = load();
   var sessions = d.sessions;
@@ -841,39 +970,51 @@ function updateHome() {
   var top = topOf(sessions, 'avoid');
   document.getElementById('kpi-t').textContent = top ? cap(top) : '—';
 
+  // Depth score
   var depth = calcDepth(sessions);
   var level = getDepthLevel(depth);
   document.getElementById('tb-badge').textContent = 'Depth '+depth;
   document.getElementById('depth-num').textContent = depth;
   document.getElementById('depth-title').textContent = level.label;
-  document.getElementById('depth-sub').textContent = level.desc;
+  document.getElementById('depth-sub').textContent = getDepthDesc(level, n);
   setTimeout(function(){
     document.getElementById('depth-bar').style.width = (depth/10*100)+'%';
   }, 100);
+  var DEPTH_DESC_BODY = [
+    'Depth measures how honestly you look at yourself — not how many days in a row you show up.',
+    'Based on '+n+' session'+(n===1?'':'s')+'. Depth grows when you answer honestly and face hard things.',
+    'The number reflects honesty quality, pattern recognition, and showing up on hard days.',
+    'Depth is not about streaks. It is about how far in you are willing to go.',
+    'Every session that goes deeper adds more than ten sessions that stay surface level.',
+  ];
   document.getElementById('depth-desc').textContent =
     n === 0
-    ? 'Depth measures how honestly and consistently you look at yourself — not how many days in a row you show up.'
-    : 'Based on '+n+' session'+(n===1?'':'s')+'. Depth grows when you answer honestly, face hard areas, and let patterns surface.';
+    ? DEPTH_DESC_BODY[0]
+    : DEPTH_DESC_BODY[(n % (DEPTH_DESC_BODY.length - 1)) + 1];
 
-  document.getElementById('mir-sess-n').textContent = n + 1;
+  // mirror session number is set after save in runConversation — no pre-set needed
 
+  // Done today
   var doneToday = sessions.some(function(s){ return s.date === today(); });
   var bb = document.getElementById('begin-btn');
   var db = document.getElementById('done-b');
   if (doneToday) {
     bb.textContent = 'Reflect again';
     db.classList.add('show');
-    db.textContent = rnd(CLOSING);
+    // Use session count so it changes each day, never same twice in a row
+    db.textContent = CLOSING[n % CLOSING.length];
   } else {
     bb.textContent = 'Begin today ↗';
     db.classList.remove('show');
   }
 
+  // Crisis banner — show if any sensitive session in last 3
   var recentSensitive = sessions.slice(-3).some(function(s){
     return s.area === 'addiction' || s.area === 'depression';
   });
   document.getElementById('crisis-b').classList.toggle('show', recentSensitive);
 
+  // Loop badge
   var topR = topOf(sessions,'root'), topA = topOf(sessions,'avoid');
   var loop = getLoop(topR, topA);
   var loopName = d.loopName || (loop ? loop.name : null);
@@ -882,12 +1023,21 @@ function updateHome() {
     lh.classList.add('show');
     document.getElementById('loop-home-name').textContent = loopName;
     var lct = sessions.filter(function(s){ return s.root===topR && s.avoid===topA; }).length;
-    document.getElementById('loop-home-sub').textContent = 'Showed up in '+lct+' of '+n+' sessions';
+    var LOOP_SUB = [
+      'Showed up in '+lct+' of '+n+' sessions.',
+      lct+' out of '+n+' sessions. It keeps returning.',
+      'Present in '+lct+' sessions. That is your most consistent pattern.',
+      'Appears '+lct+' times. This is what the mirror keeps showing you.',
+    ];
+    document.getElementById('loop-home-sub').textContent = LOOP_SUB[n % LOOP_SUB.length];
   } else {
     lh.classList.remove('show');
   }
 }
 
+// ═══════════════════════════════════════════════
+// CONVERSATION ENGINE
+// ═══════════════════════════════════════════════
 var convLocked = false;
 
 async function beginReflect() {
@@ -918,6 +1068,7 @@ function appendMsg(cls, html) {
 }
 
 async function typeInto(el, text, spd) {
+  // Clear safely without innerHTML to avoid orphan cursors
   while (el.firstChild) el.removeChild(el.firstChild);
   var cur = document.createElement('span');
   cur.className = 'cur';
@@ -1008,22 +1159,36 @@ function askWrite() {
     var div = appendMsg('', '');
     var wrap = document.createElement('div');
     wrap.className = 'fw-wrap';
+
     var ta = document.createElement('textarea');
     ta.className = 'fw-area';
-    ta.placeholder = 'Write it out. Only you will see this.';
+    var TA_PH = [
+      'Write it out. Only you will see this.',
+      'Say the thing you have not said.',
+      'No filter. Just what is true right now.',
+      'Write the version you would not say out loud.',
+      'Honest. Unpolished. Just for you.',
+      'What is the sentence you keep not finishing?',
+    ];
+    ta.placeholder = TA_PH[n % TA_PH.length];
     ta.maxLength = 600;
+
     var cc = document.createElement('div');
     cc.className = 'fw-cc';
     cc.textContent = '0 / 600';
     ta.addEventListener('input', function(){ cc.textContent = ta.value.length + ' / 600'; });
+
     var btnRow = document.createElement('div');
     btnRow.className = 'btn-row';
+
     var doneBtn = document.createElement('button');
     doneBtn.className = 'btn-cta';
     doneBtn.textContent = 'Done';
+
     var skipBtn = document.createElement('button');
     skipBtn.className = 'btn-ghost';
     skipBtn.textContent = 'Skip';
+
     function finish(val) {
       doneBtn.disabled = true;
       skipBtn.disabled = true;
@@ -1031,6 +1196,7 @@ function askWrite() {
     }
     doneBtn.addEventListener('click', function(){ finish(ta.value.trim()); });
     skipBtn.addEventListener('click', function(){ finish(''); });
+
     btnRow.appendChild(doneBtn); btnRow.appendChild(skipBtn);
     wrap.appendChild(ta); wrap.appendChild(cc); wrap.appendChild(btnRow);
     div.appendChild(wrap);
@@ -1038,14 +1204,20 @@ function askWrite() {
   });
 }
 
+// ═══════════════════════════════════════════════
+// THE CONVERSATION
+// ═══════════════════════════════════════════════
 async function runConversation() {
   var d = load();
   var sessions = d.sessions;
   var n = sessions.length;
 
+  MOODS = getMoods(n);
+  ROOTS = getRoots(n);
   updateProg(5);
   await pause(300);
 
+  // Opening — varies with history
   if (n === 0) {
     await mirrorSays("You are here. That already means something.");
     await pause(500);
@@ -1055,66 +1227,217 @@ async function runConversation() {
     await pause(500);
     await mirrorSays("Answer honestly. That is the only rule.");
   } else if (n < 5) {
-    await mirrorSays("You came back.");
+    var CAME_BACK = [
+      "You came back.",
+      "Back again.",
+      "You came back. That says something.",
+      "Here again.",
+    ];
+    await mirrorSays(CAME_BACK[n % CAME_BACK.length]);
     await pause(600);
-    var topA = topOf(sessions,'avoid');
-    if (topA) {
-      await mirrorSays("Last time it was "+cap(topA)+". Let us see what is here today.");
+    var lastSess = sessions[sessions.length - 1];
+    var lastAvoid = lastSess && lastSess.avoid;
+    var lastArea  = lastSess && lastSess.area;
+    if (lastAvoid && lastArea) {
+      var LAST_LINE2 = [
+        "Last time it was "+cap(lastArea)+" — "+cap(lastAvoid)+". Let us see what today brings.",
+        cap(lastArea)+" and "+cap(lastAvoid)+" last time. What is here today?",
+        "Last session: "+cap(lastArea)+", "+cap(lastAvoid)+". Same thing or different?",
+      ];
+      await mirrorSays(LAST_LINE2[n % LAST_LINE2.length]);
+    } else if (lastAvoid) {
+      var LAST_LINE3 = [
+        "Last time it was "+cap(lastAvoid)+". Let us see what is here today.",
+        cap(lastAvoid)+" last time. What is it today?",
+        "Still "+cap(lastAvoid)+" or something different?",
+      ];
+      await mirrorSays(LAST_LINE3[n % LAST_LINE3.length]);
     } else {
-      await mirrorSays("Good. Let us see what is here today.");
+      var FRESH_OPEN = [
+        "Good. Let us see what is here today.",
+        "What did you bring today?",
+        "Let us see what is sitting with you.",
+      ];
+      await mirrorSays(FRESH_OPEN[n % FRESH_OPEN.length]);
     }
   } else {
     var streak = calcStreak(sessions);
     var depth = calcDepth(sessions);
+    var lastSessX = sessions[sessions.length - 1];
+    var lastAvoidX = lastSessX && lastSessX.avoid;
+    var lastAreaX  = lastSessX && lastSessX.area;
     var topAv = topOf(sessions,'avoid');
+    var topRt = topOf(sessions,'root');
+
+    var DEPTH_HIGH = [
+      "Depth "+depth+". You are not doing this for show anymore.",
+      "Depth "+depth+". Most people stop well before here.",
+      "You are at depth "+depth+". The mirror is sharp now.",
+      "Depth "+depth+" — that is not an easy place to get to. You got here.",
+    ];
+    var STREAK_POOL = [
+      streak+" sessions in a row. Something in you is not running from this anymore.",
+      streak+" in a row. That is consistency. That is also the point where it starts to matter.",
+      "Back again — "+streak+" straight. The pattern of showing up is real now.",
+    ];
+    var PATTERN_POOL = [
+      "You keep coming back. That means something is real here.",
+      "Still here. Something keeps pulling you back — and that something is worth paying attention to.",
+      "You have not stopped. That is the most important thing.",
+    ];
+
     if (depth >= 6) {
-      await mirrorSays("Depth "+depth+". You are not doing this for show anymore.");
+      await mirrorSays(DEPTH_HIGH[n % DEPTH_HIGH.length]);
     } else if (streak >= 3) {
-      await mirrorSays(streak+" sessions in a row. Something in you is not running from this anymore.");
+      await mirrorSays(STREAK_POOL[n % STREAK_POOL.length]);
     } else if (topAv) {
       var ct = sessions.filter(function(s){ return s.avoid===topAv; }).length;
-      await mirrorSays(ct+" sessions and "+cap(topAv)+" keeps showing up. Let us go deeper today.");
+      if (ct >= 3) {
+        var PATTERN_NAMED = [
+          ct+" sessions and "+cap(topAv)+" keeps showing up. Let us go deeper today.",
+          '"'+cap(topAv)+'" has appeared '+ct+' times now. That is not random. That is the pattern.',
+          "You keep coming back to "+cap(topAv)+". "+ct+" times. Today — what is underneath it?",
+        ];
+        await mirrorSays(PATTERN_NAMED[n % PATTERN_NAMED.length]);
+      } else if (lastAvoidX && lastAreaX) {
+        var LAST_LINE = [
+          "Last time: "+cap(lastAreaX)+" — "+cap(lastAvoidX)+". What is here today?",
+          "Last session it was "+cap(lastAreaX)+" — "+cap(lastAvoidX)+". Let us see what today brings.",
+          cap(lastAreaX)+" and "+cap(lastAvoidX)+" last time. What is the thing today?",
+        ];
+        await mirrorSays(LAST_LINE[n % LAST_LINE.length]);
+      } else {
+        await mirrorSays(PATTERN_POOL[n % PATTERN_POOL.length]);
+      }
     } else {
-      await mirrorSays("You keep coming back. That means something is real here.");
+      await mirrorSays(PATTERN_POOL[n % PATTERN_POOL.length]);
     }
   }
 
   await pause(600);
   updateProg(14);
 
-  await mirrorSays("Where is the weight right now?");
+  // STEP 1 — Area — question rotates so it never feels like a form
+  var AREA_Q = [
+    "Where is the weight right now?",
+    "What is pulling at you today?",
+    "What brought you here this time?",
+    "Where is the friction sitting today?",
+    "What is alive in you right now — the thing you came here with?",
+    "What is the thing you have been carrying since last time?",
+    "What needs to be looked at today?",
+    "Where is it — the thing you have not named yet today?",
+  ];
+  await mirrorSays(AREA_Q[n % AREA_Q.length]);
   await pause(200);
   var aOpt = await askOpts(AREAS);
   sess.area = aOpt.v;
   userSaid(aOpt.l);
   await pause(400);
 
+  // Sensitive area — care message rotates so it never reads like a script
   if (SENSITIVE_AREAS[sess.area]) {
     await pause(300);
-    if (sess.area === 'depression') {
-      careMsg("This takes honesty. If things feel very dark right now — iCall: 9152987821 is available.");
-    } else {
-      careMsg("This takes courage to look at. If you need to talk to someone — iCall: 9152987821.");
-    }
+    var DEP_CARE = [
+      "This takes honesty. If things feel very dark right now — iCall: 9152987821 is available.",
+      "Coming back to this takes something. If it ever gets too heavy — iCall: 9152987821.",
+      "You are looking at a hard thing. That is brave. iCall: 9152987821 is there if you need a person.",
+      "This is real. You do not have to carry it alone — iCall: 9152987821, always available.",
+    ];
+    var ADD_CARE = [
+      "This takes courage to look at. If you need to talk to someone — iCall: 9152987821.",
+      "Coming back here again. That is not small. iCall: 9152987821 if you need support.",
+      "You keep showing up for this. If it gets too much to hold alone — iCall: 9152987821.",
+      "Looking at this honestly is hard work. iCall: 9152987821 is available whenever you need it.",
+    ];
+    var careMsgs = (sess.area === 'depression') ? DEP_CARE : ADD_CARE;
+    careMsg(careMsgs[n % careMsgs.length]);
     await pause(600);
   }
 
   updateProg(26);
 
+  // Area reflection — each area has distinct language so sessions never feel identical
   var areaCt = sessions.filter(function(s){ return s.area===sess.area; }).length;
+  var AREA_REPEAT_POOL = {
+    discipline: [
+      "You have come back to Discipline "+areaCt+" times. The consistency question is still open. Where exactly is it breaking down?",
+      "Discipline again — "+areaCt+" times now. The follow-through is still not landing. What is the real block?",
+      "Still in Discipline. "+areaCt+" sessions. The habit or focus question has not resolved. What is specifically stopping it?",
+    ],
+    relation:   [
+      "You have come back to Relationship "+areaCt+" times. Something with someone is unresolved. What is it?",
+      "Relationship again — "+areaCt+" times. The same dynamic or person keeps pulling you back here. What is it today?",
+      "Still in Relationship. "+areaCt+" sessions. Something interpersonal is not shifting. What is the thing underneath it?",
+    ],
+    direction:  [
+      "You have come back to Direction "+areaCt+" times. The decision is still open. What is holding it?",
+      "Direction again — "+areaCt+" times. You keep returning to the question of where you are going. What is the stuck point today?",
+      "Still in Direction. "+areaCt+" sessions. The path or the choice has not clarified. What is it really about?",
+    ],
+    identity:   [
+      "You have come back to Identity "+areaCt+" times. The question of who you are is still live. Where is it today?",
+      "Identity again — "+areaCt+" times. The self-worth or self-concept question keeps surfacing. What part is here today?",
+      "Still in Identity. "+areaCt+" sessions. Something about how you see yourself has not settled. What is it today?",
+    ],
+    mind:       [
+      "You have come back to Mind "+areaCt+" times. The loop has not broken yet. What is running today?",
+      "Mind again — "+areaCt+" times. The anxiety or the spiral keeps pulling you here. What is feeding it today?",
+      "Still in Mind. "+areaCt+" sessions. The mental noise has not quieted. What is the thought that keeps returning?",
+    ],
+    work:       [
+      "You have come back to Work "+areaCt+" times. Something there keeps not getting done. What is it really?",
+      "Work again — "+areaCt+" times. The ambition or the block keeps bringing you back here. What is it today?",
+      "Still in Work. "+areaCt+" sessions. Something professionally is not shifting. What is the specific thing?",
+    ],
+    addiction:  [
+      "You have come back to this "+areaCt+" times. You keep looking at it. What part are you still circling?",
+      "Back here again — "+areaCt+" times. You keep returning. What is the part that has not been named yet?",
+      "Still here with this. "+areaCt+" sessions. You are not running from it. What is the thing you have not said yet?",
+    ],
+    depression: [
+      "You have come back to this "+areaCt+" times. You keep showing up. What is the weight right now?",
+      "Back here again — "+areaCt+" times. The heaviness has not lifted. What is the thing that is sitting hardest today?",
+      "Still here. "+areaCt+" sessions. You keep returning when it would be easier not to. What is alive today?",
+    ],
+  };
+  var areaRepeatIdx = areaCt % 3;
+  var AREA_REPEAT = {};
+  Object.keys(AREA_REPEAT_POOL).forEach(function(k){
+    AREA_REPEAT[k] = AREA_REPEAT_POOL[k][areaRepeatIdx];
+  });
+  var AREA_FIRST_POOL = {
+    discipline: ["In Discipline — where exactly is it breaking down for you?","The discipline question: what specifically is not happening that should be?","In Discipline — what is the thing you keep not doing?"],
+    relation:   ["In Relationship — what is the thing sitting unspoken between you and someone?","The relationship block — what is the thing that is not being said or done?","In Relationship — who is it about, and what is the thing?"],
+    direction:  ["In Direction — what is the call you keep not making?","The direction question: what is the thing you are not committing to?","In Direction — what is it that is staying unresolved?"],
+    identity:   ["In Identity — what is the part of yourself you are not looking at right now?","The identity question: what is the version of yourself you are avoiding?","In Identity — what is the thing about yourself you are not willing to see?"],
+    mind:       ["In Mind — what is the loop that keeps running?","The mental block: what is the thought that keeps coming back?","In Mind — what is the thing you keep thinking about without resolving?"],
+    work:       ["In Work — what is the thing you keep moving around instead of doing?","The work block: what specifically is not getting done?","In Work — what is the task or situation you are avoiding?"],
+    addiction:  ["What part of this are you actually avoiding right now?","In this space — what is the specific thing you are circling?","What is the part of this that you have not looked at directly?"],
+    depression: ["What is the thing that feels heaviest right now?","In this space — what is the weight that is sitting hardest?","What specifically is the hardest part of this right now?"],
+  };
+  var AREA_FIRST = {};
+  Object.keys(AREA_FIRST_POOL).forEach(function(k){
+    AREA_FIRST[k] = AREA_FIRST_POOL[k][areaCt % AREA_FIRST_POOL[k].length];
+  });
   if (areaCt >= 2) {
-    await mirrorSays("You have come back to "+cap(sess.area)+" "+areaCt+" times.");
+    await mirrorSays(AREA_REPEAT[sess.area] || "You have come back to "+cap(sess.area)+" "+areaCt+" times. What is it specifically today?");
+  } else if (areaCt === 1) {
+    // 2nd visit to same area — acknowledge continuity
+    var AREA_CONT = [
+      cap(sess.area)+" again.",
+      "Back to "+cap(sess.area)+".",
+      cap(sess.area)+" was here last time too.",
+    ];
+    await mirrorSays(AREA_CONT[n % AREA_CONT.length]);
     await pause(400);
-    await mirrorSays("Something in here keeps pulling. What is it specifically?");
-  } else if (sess.area === 'addiction') {
-    await mirrorSays("Okay. What part of this are you actually avoiding?");
-  } else if (sess.area === 'depression') {
-    await mirrorSays("Okay. What is the thing that feels hardest right now?");
+    await mirrorSays(AREA_FIRST[sess.area] || "In "+cap(sess.area)+" — what are you actually avoiding right now?");
   } else {
-    await mirrorSays("In "+cap(sess.area)+" — what are you actually avoiding right now?");
+    await mirrorSays(AREA_FIRST[sess.area] || "In "+cap(sess.area)+" — what are you actually avoiding right now?");
   }
   await pause(200);
 
+  // STEP 2 — Avoidance
   var avOpts = AVOID_MAP[sess.area] || AVOID_MAP.discipline;
   var avOpt = await askOpts(avOpts);
   sess.avoid = avOpt.v;
@@ -1122,74 +1445,515 @@ async function runConversation() {
   await pause(600);
   updateProg(40);
 
+  // Avoidance reflection — area-aware, distinct per session count
   var avoidCt = sessions.filter(function(s){ return s.avoid===sess.avoid; }).length;
+  // Each specific avoidance gets its own first-time response
+  var AVOID_FIRST_SPECIFIC = {
+    // discipline
+    'starting':     "Not starting yet. That blank page problem. What is the actual thing behind it — not the excuse?",
+    'finishing':    "Getting close but not finishing. That last stretch always stalls. What happens right before you stop?",
+    'saying no':    "Saying no. You let things in that should not be there. What makes the no so hard?",
+    'showing up':   "Showing up consistently. The intention is there. The follow-through is not. What is the gap?",
+    // relation
+    'conflict':     "The hard conversation you keep not having. Who is it with, and what is the thing you are not saying?",
+    'limits':       "Setting limits. You let people past the line. What makes holding it feel impossible?",
+    'honesty':      "Full honesty. There is a version of the truth you say, and a fuller one you do not. What is the fuller one?",
+    'leaving':      "Leaving. Walking away from something that no longer fits. What is keeping you in it?",
+    // direction
+    'deciding':     "Making the call. The decision is sitting open. What would you choose if you could not overthink it?",
+    'committing':   "Committing all the way. One foot in, one foot out. What is the exit you are keeping open?",
+    'letting go':   "Letting go of something. It no longer belongs but you are holding it. What is it?",
+    'asking-help':  "Asking for help. You are handling it alone when you do not have to. What stops you from asking?",
+    // identity
+    'being seen':   "Being seen fully. You show a version. What is the part you are keeping back?",
+    'flaws':        "Your flaws — facing them without self-attack. What is the flaw you are least willing to look at?",
+    'standards':    "Your standards. For yourself or others. Where are you letting the bar sit lower than it should?",
+    'compassion':   "Self-compassion. You are hard on yourself in a specific way. What is it?",
+    // mind
+    'sitting':      "Sitting with it without solving. The discomfort comes and you move. What is the feeling you keep escaping?",
+    'acting':       "Acting despite uncertainty. You wait for certainty that is not coming. What would the first move be?",
+    'releasing':    "Letting go of what you cannot control. You are holding something that is not yours to hold. What is it?",
+    'trusting':     "Trusting yourself. Your gut says something. Your head finds reasons to doubt it. What is it telling you?",
+    // work
+    'hard thing':   "The hard thing you keep not doing. What specifically is it — the actual task, not the category?",
+    'asking':       "Asking for what you need at work. What is the thing you want but are not asking for?",
+    'quitting':     "Calling it — admitting something is not working. What is the thing you already know is not working?",
+    'starting over':"Starting over — releasing the sunk cost. What is the thing you have invested too much in to let go of?",
+    // addiction
+    'admitting it': "Admitting it fully, without softening. What is the version you have not let yourself say out loud?",
+    'one more time':"The one more time loop. It will be the last time — until it is not. When did that start?",
+    'asking help':  "Asking for help with this. You are carrying it alone. What stops you from letting someone in?",
+    'the trigger':  "The trigger. You know what sets it off. Say it — what is it?",
+    // depression
+    'getting up':   "Getting up. The weight of starting. How long has the morning been this heavy?",
+    'reaching out': "Reaching out when isolation feels safer. Who is the person you have been least able to contact?",
+    'feeling it':   "Feeling it instead of going numb. What is underneath the numbness — what would you feel if you let yourself?",
+    'small thing':  "One small thing that used to matter. What is it? When did it stop?",
+  };
+  var AVOID_FIRST_POOL = {
+    discipline: ["That is the block. What is the real reason underneath it?","Something is stopping this. Not the surface reason. What is it?","That keeps not happening. What is the honest reason?"],
+    relation:   ["That is what is not being said or done. What is driving that?","Something interpersonal is stuck here. What is underneath it?","That is what you keep not doing in this relationship. What is the reason?"],
+    direction:  ["That is the hesitation. What is at the root of it?","The direction block is specific. What is underneath the hesitation?","Something is making that impossible to do. What is it?"],
+    identity:   ["That is the thing you are not facing about yourself. What is underneath it?","The identity question has something specific underneath it. What is it?","You are avoiding something about yourself. What is feeding that?"],
+    mind:       ["That is the loop. What keeps feeding it?","The mental block keeps running. What is underneath it?","That is what the mind keeps returning to. What is driving it?"],
+    work:       ["That is what you keep stepping around. What is really holding it?","The work avoidance is specific. What is the real reason?","Something makes that impossible to do at work. What is it?"],
+    addiction:  ["That is the part you keep circling. What is under it?","You keep returning to that. What is the thing underneath?","That part of this keeps showing up. What is driving it?"],
+    depression: ["That is the hardest part right now. What is underneath that weight?","That is where the heaviness is sitting. What is underneath it?","The depression is sitting around that. What is the root of it?"],
+  };
+  var AVOID_FIRST = {};
+  Object.keys(AVOID_FIRST_POOL).forEach(function(k){
+    AVOID_FIRST[k] = AVOID_FIRST_POOL[k][avoidCt % AVOID_FIRST_POOL[k].length];
+  });
+  // Repeat avoidance responses — specific to what was chosen
+  var AVOID_REPEAT_2_SPECIFIC = {
+    'starting':     '"Starting" keeps coming up. Something is making the first step impossible. It is worth taking that seriously.',
+    'finishing':    '"Finishing" again. The last stretch is where it keeps stalling. What is making completion feel dangerous?',
+    'saying no':    '"Saying no" — second time here. The boundary is still not holding. What are you afraid happens if you actually say no?',
+    'showing up':   '"Showing up" again. The consistency has not arrived. What breaks it each time?',
+    'conflict':     '"Conflict" again. The hard conversation is still waiting. How much longer are you going to defer it?',
+    'limits':       '"Setting limits" — again. You let it happen again. What made you override yourself?',
+    'honesty':      '"Full honesty" again. There is still a version of the truth you are not saying. What is it this time?',
+    'leaving':      '"Leaving" — you are still not gone. What is the real thing keeping you there?',
+    'deciding':     '"Deciding" — the call is still open. What would you choose right now if there was no going back?',
+    'committing':   '"Committing" again. The exit is still open. What would it cost you to close it?',
+    'letting go':   '"Letting go" — still holding it. What is the thing you are most afraid happens if you release it?',
+    'asking-help':  '"Asking for help" — still not asking. Who specifically would you ask, and what stops you?',
+    'being seen':   '"Being seen" — second time. You are still hiding something. What is the specific thing?',
+    'flaws':        '"Your flaws" again. The self-attack is still running. What is the flaw you are least ready to accept?',
+    'standards':    '"Your standards" again. The bar is still in the wrong place. Where exactly?',
+    'compassion':   '"Self-compassion" again. You are still being hard on yourself. What is the specific thing you are not forgiving yourself for?',
+    'sitting':      '"Sitting with it" — still escaping. What is the specific feeling you keep running from?',
+    'acting':       '"Acting anyway" — the uncertainty is still stopping you. What is the first move you keep not taking?',
+    'releasing':    '"Letting go" — still holding the thing you cannot control. What is it?',
+    'trusting':     '"Trusting yourself" — your gut keeps getting overridden. What is the thing it is telling you right now?',
+    'hard thing':   '"The hard thing" is still not done. What is the specific task, and what happened last time you tried?',
+    'asking':       '"Asking" at work — still not doing it. What is the exact thing you want that you are not asking for?',
+    'quitting':     '"Calling it" — it is still running even though you know it is not working. What would ending it actually look like?',
+    'starting over':'"Starting over" — the sunk cost is still holding you. How much more are you willing to put in before you stop?',
+    'admitting it': '"Admitting it" — you are still softening it. What is the version you have not said even to yourself?',
+    'one more time': '"One more time" — the loop ran again. Since you named it last time, has anything changed?',
+    'asking help':  '"Asking for help" — still alone with it. What is the real reason you will not let someone in?',
+    'the trigger':  '"The trigger" — you named it before. Did anything change in how you responded to it?',
+    'getting up':   '"Getting up" — still the hardest part. What specifically makes the morning so heavy?',
+    'reaching out': '"Reaching out" — still not doing it. What are you protecting yourself from?',
+    'feeling it':   '"Feeling it" — still going numb. What is the specific thing you are most afraid to feel?',
+    'small thing':  '"One small thing" — still not there. What would it mean if that thing came back?',
+    'one more time':'"One more time" — the loop is still running. Since you named it, has it slowed at all?',
+    'asking help':  '"Asking for help" — still alone with it. What is the real reason you will not let anyone in?',
+    'the trigger':  '"The trigger" — you named it before. Did anything change about how you related to it?',
+    'getting up':   '"Getting up" — still the hardest part. What is the thing you are waking up to that makes it so heavy?',
+    'reaching out': '"Reaching out" — still not doing it. Who is the one person you could actually call?',
+    'feeling it':   '"Feeling it" — still going numb. What is the thing underneath that you are most afraid to feel?',
+    'small thing':  '"One small thing" — still not there. What specifically would it mean if that thing came back?',
+  };
+  var AVOID_REPEAT_2_POOL = {
+    discipline: ['"'+cap(sess.avoid)+'" has come up before. It is not a one-off. What is the root?','"'+cap(sess.avoid)+'" appeared last time too. The block is consistent. What is driving it?','You were here with "'+cap(sess.avoid)+'" before. What is the real thing?'],
+    relation:   ['"'+cap(sess.avoid)+'" again. This keeps being the sticking point. What is really driving it?','"'+cap(sess.avoid)+'" showed up last time. The dynamic has not changed. What is holding it?','Second time with "'+cap(sess.avoid)+'" in relationship. What is underneath it?'],
+    direction:  ['"'+cap(sess.avoid)+'" is back. The hesitation has not shifted. What is underneath it?','"'+cap(sess.avoid)+'" in direction again. The block is consistent. What is making it stay?','Second time here with "'+cap(sess.avoid)+'". What is holding it?'],
+    identity:   ['"'+cap(sess.avoid)+'" again. You keep bumping into this. What is at the root?','"'+cap(sess.avoid)+'" showed up before. The self-concept question has not resolved. What is it?','Second time with "'+cap(sess.avoid)+'". Something keeps blocking this.'],
+    mind:       ['"'+cap(sess.avoid)+'" is still running. What keeps bringing it back?','"'+cap(sess.avoid)+'" was here before. The mental pattern has not shifted. What feeds it?','Second time with "'+cap(sess.avoid)+'" in mind. What is the root?'],
+    work:       ['"'+cap(sess.avoid)+'" again. You have been here before. What is really underneath this?','"'+cap(sess.avoid)+'" at work again. The block is stable. What is the honest reason?','Second time with "'+cap(sess.avoid)+'" at work. What is driving it?'],
+    addiction:  ['You have been here with this before. What is still pulling you back to it?','This showed up last time too. Something has not changed. What is still running?','Second time with this. What specifically keeps bringing it back?'],
+    depression: ['This is still the hardest part. What is the thing underneath it?','This showed up before. The weight has not lifted. What is the thing sitting underneath?','Second time with this in depression. What is it really about?'],
+  };
+  var AVOID_REPEAT_2 = {};
+  Object.keys(AVOID_REPEAT_2_POOL).forEach(function(k){
+    AVOID_REPEAT_2[k] = AVOID_REPEAT_2_POOL[k][avoidCt % AVOID_REPEAT_2_POOL[k].length];
+  });
   if (avoidCt >= 3) {
-    await mirrorSays('"'+cap(sess.avoid)+'" has come up '+avoidCt+' times now.');
+    var AVOID_COUNT_LINES = [
+      '"'+cap(sess.avoid)+'" has come up '+avoidCt+' times now.',
+      avoidCt+' sessions with "'+cap(sess.avoid)+'". That is a pattern.',
+      '"'+cap(sess.avoid)+'" — '+avoidCt+' times across your sessions. This is consistent.',
+      avoidCt+' times. "'+cap(sess.avoid)+'" keeps appearing.',
+    ];
+    await mirrorSays(AVOID_COUNT_LINES[avoidCt % AVOID_COUNT_LINES.length]);
     await pause(500);
-    await mirrorSays("That is not a phase. What is really underneath it?");
-  } else if (avoidCt === 2) {
-    await mirrorSays("Second time "+cap(sess.avoid)+" has appeared.");
+    // Avoidance-specific 3+ challenge
+    var AVOID_3PLUS = {
+      'starting':     "You keep not starting. "+avoidCt+" times. The first step is not the problem — you know how to start. What is the thing you are afraid of what comes after you do?",
+      'finishing':    "You keep not finishing. "+avoidCt+" times. Getting close is safe. Finishing means it can be seen and judged. Is that what is happening?",
+      'conflict':     "The conversation still has not happened. "+avoidCt+" sessions. At what point does avoiding it become a choice to stay in the situation as it is?",
+      'limits':       "The limits still are not holding. "+avoidCt+" times. You keep overriding yourself. What is the belief underneath that says you cannot hold the line?",
+      'deciding':     "The decision is still open. "+avoidCt+" sessions. You are not stuck — you are choosing not to choose. What are you protecting by keeping it open?",
+      'honesty':      "Still not saying the full thing. "+avoidCt+" times. The partial truth is a choice. What is the worst that happens if you say the whole thing?",
+      'being seen':   "Still not letting yourself be fully seen. "+avoidCt+" sessions. What is the specific thing you are most afraid they will see?",
+      'trusting':     "Still not trusting your own read. "+avoidCt+" times. You keep overriding yourself. What is the last thing your gut told you that you ignored?",
+      'asking':       "Still not asking. "+avoidCt+" times. You keep carrying it alone. What specifically do you think asking says about you?",
+      'admitting it': "Still not fully admitting it. "+avoidCt+" times. You are circling the full truth. What is the last piece you have not said?",
+      'one more time':"The one more time loop has continued. "+avoidCt+" sessions. It has not been the last time. When do you think it will be?",
+    };
+    // Fill in missing AVOID_3PLUS keys
+    var AVOID_3PLUS_EXTRA = {
+      'finishing':    '"Finishing" — '+avoidCt+' times. The last step keeps not happening. Something about completion feels dangerous.',
+      'saying no':    '"Saying no" — '+avoidCt+' times. The limit keeps not holding. That is not a coincidence — that is a consistent pattern.',
+      'showing up':   '"Showing up" — '+avoidCt+' times. The consistency keeps breaking. What specifically resets it each time?',
+      'conflict':     'The hard conversation has not happened — '+avoidCt+' sessions in. At what point does deferring become a decision to accept the current situation?',
+      'limits':       '"Setting limits" — '+avoidCt+' times. You keep letting it happen. The limit is not unclear — something keeps making you override it.',
+      'leaving':      '"Leaving" — '+avoidCt+' sessions. You are still there. What specifically keeps you from going?',
+      'deciding':     '"Deciding" — '+avoidCt+' times. The call is still open. You are not unable to decide — you are unwilling to accept what deciding closes off.',
+      'committing':   '"Committing" — '+avoidCt+' times. One foot out. What is the exit you are keeping available, and what are you afraid of losing if you close it?',
+      'letting go':   '"Letting go" — '+avoidCt+' times. Still holding it. What do you think happens if you actually release this?',
+      'being seen':   '"Being seen" — '+avoidCt+' times. Still hiding the specific thing. What is the part you are most afraid of showing?',
+      'flaws':        '"Your flaws" — '+avoidCt+' times. The self-attack keeps running. What is the specific flaw you are least willing to accept?',
+      'standards':    '"Your standards" — '+avoidCt+' times. The bar is still in the wrong place. What would it cost you to hold it where it should be?',
+      'compassion':   '"Self-compassion" — '+avoidCt+' times. You are still hard on yourself. What would it mean to actually stop?',
+      'sitting':      '"Sitting with it" — '+avoidCt+' times. Still escaping. What is the specific feeling you are most afraid of sitting with?',
+      'acting':       '"Acting anyway" — '+avoidCt+' times. Uncertainty is still the reason. What is the smallest possible move you could make today?',
+      'releasing':    '"Letting go" — '+avoidCt+' times. Still holding what you cannot control. Name the specific thing.',
+      'quitting':     '"Calling it" — '+avoidCt+' times. Still running something you know is not working. What would ending it actually look like?',
+      'asking help':  '"Asking for help" — '+avoidCt+' times. Still alone with it. What do you think asking would say about you?',
+      'the trigger':  '"The trigger" — '+avoidCt+' times. You have named it. Has anything changed in how you relate to it?',
+      'getting up':   '"Getting up" — '+avoidCt+' times. The weight of the morning has not lifted. What is the thing you are waking up to?',
+      'reaching out': '"Reaching out" — '+avoidCt+' times. Still isolated. Who is the one person you could actually contact today?',
+      'feeling it':   '"Feeling it" — '+avoidCt+' times. Still going numb. What is the specific feeling you are most afraid of?',
+      'small thing':  '"One small thing" — '+avoidCt+' times. Still not there. What specifically would it take for that thing to come back?',
+    };
+    var allAvoid3Plus = Object.assign({}, AVOID_3PLUS, AVOID_3PLUS_EXTRA);
+    var AVOID_3GENERIC = [
+      '"'+cap(sess.avoid)+'" — '+avoidCt+' times. That is not occasional. What is the thing that keeps resetting it?',
+      avoidCt+' sessions with "'+cap(sess.avoid)+'". The pattern is stable. What feeds it?',
+      '"'+cap(sess.avoid)+'" has appeared '+avoidCt+' times. What specifically keeps bringing it back?',
+      'You have been to "'+cap(sess.avoid)+'" '+avoidCt+' times. That is a loop. What is the engine?',
+    ];
+    var threeMsg = allAvoid3Plus[sess.avoid] || AVOID_3GENERIC[avoidCt % AVOID_3GENERIC.length];
+    await mirrorSays(threeMsg);
     await pause(400);
-    await mirrorSays("What is the root of it?");
+    var PATTERN_SECOND = [
+      "What specifically keeps resetting this?",
+      "What is the thing that runs underneath it?",
+      "Not the surface answer. The real one.",
+      "Where does this loop actually start?",
+    ];
+    await mirrorSays(PATTERN_SECOND[avoidCt % PATTERN_SECOND.length]);
+  } else if (avoidCt === 2) {
+    var specificRepeat = AVOID_REPEAT_2_SPECIFIC[sess.avoid] || AVOID_REPEAT_2[sess.area] || '"'+cap(sess.avoid)+'" has appeared before. What is the root of it?';
+    await mirrorSays(specificRepeat);
+    await pause(400);
+  } else if (avoidCt === 1) {
+    // 2nd time picking this avoidance — acknowledge it briefly, then ask root
+    var SEEN_BEFORE = [
+      '"'+cap(sess.avoid)+'" came up last time too.',
+      'Back to "'+cap(sess.avoid)+'" again.',
+      'You have been here with "'+cap(sess.avoid)+'" before.',
+    ];
+    await mirrorSays(SEEN_BEFORE[n % SEEN_BEFORE.length]);
+    await pause(400);
+    var specificLine2 = AVOID_FIRST_SPECIFIC[sess.avoid];
+    await mirrorSays(specificLine2 || AVOID_FIRST[sess.area] || "What is the root of it?");
   } else {
-    await mirrorSays("Okay. What is underneath that?");
+    var specificLine = AVOID_FIRST_SPECIFIC[sess.avoid];
+    await mirrorSays(specificLine || AVOID_FIRST[sess.area] || "What is underneath that?");
   }
   await pause(200);
 
+  // STEP 3 — Root
   var rOpt = await askOpts(ROOTS);
   sess.root = rOpt.v;
   userSaid(rOpt.l);
   await pause(700);
   updateProg(54);
 
+  // Root reflection — responds at every level, not just 3+
   var rootCt = sessions.filter(function(s){ return s.root===sess.root; }).length;
+  // Root + area specific first responses — the mirror speaks to the actual situation
+  // ROOT_AREA_FIRST: each combo gets a pool of 3 rotating lines
+  var ROOT_AREA_POOL = {
+    'fear+discipline':    ["Fear underneath the discipline block. Not fear of failure exactly — more fear of what succeeding would demand of you. Is that it?","The discipline block is fear-driven. The question is not can you do it — it is what you are afraid happens when you do.","Fear is making the starting or finishing feel dangerous. What specifically is at risk if you follow through?"],
+    'fear+relation':      ["Fear in the relationship space. Of conflict, of loss, of someone reaction. Which one is it specifically?","Something in this relationship feels threatening. The avoidance is protection. What are you protecting against?","Fear shapes what you say and do not say here. What is the specific thing you are afraid of?"],
+    'fear+direction':     ["Fear underneath the direction block. The decision is not unclear — the consequences of deciding are what feel dangerous.","The direction is actually visible to you. The fear is of what committing to it means.","Fear of the wrong direction — or fear of what the right one costs. Which one is running this?"],
+    'fear+identity':      ["Fear of being seen for what you actually are. Not the version you manage. The real one.","The identity question has fear underneath it. Fear of being found out, or fear of having to change.","What you are afraid people will see about you — that is what this is about."],
+    'fear+mind':          ["Fear is what feeds the loop. The thoughts keep coming because something underneath feels genuinely threatening. What is the thing?","The mental noise is fear running without an object. What is the actual thing you are afraid of?","Anxiety is fear that has not found its source yet. What is the specific thing underneath the loop?"],
+    'fear+work':          ["Fear underneath the work block. Of being exposed as not good enough, or of succeeding and what that brings. Which one?","The work block is fear-driven. Of the outcome, of the judgment, of what comes after.","What specifically are you afraid happens if this goes wrong? Or if it goes right?"],
+    'fear+addiction':     ["Fear is underneath this. Fear of what you are without it. Or fear of what happens when you stop.","The addiction is partly fear management. What does it help you not feel or not face?","Fear of who you are without this. That is worth sitting with."],
+    'fear+depression':    ["Fear underneath the depression. Sometimes what looks like emptiness is actually fear that has been going for so long it stopped feeling like fear.","Depression and fear are often the same thing at different intensities. What is the thing underneath that feels threatening?","The flatness can be suppressed fear. What is the thing you stopped feeling because feeling it was too much?"],
+    'comfort+discipline': ["Comfort. The task is uncomfortable, so you do the comfortable version instead. The gap between intention and action is exactly this.","Every time the discipline block appears, comfort is the alternative you take. What specifically is more comfortable than the real task?","The comfortable version of discipline is preparation, planning, and thinking about it. The uncomfortable version is doing it."],
+    'comfort+relation':   ["Comfort. Staying in the dynamic because disrupting it feels worse than tolerating it. The comfort of the familiar over honest.","The relationship dynamic is uncomfortable but known. Changing it requires a conversation that might make things worse before better.","You tolerate what you tolerate because the disruption feels bigger than the cost of staying. Is that still true?"],
+    'comfort+direction':  ["Comfort. Not deciding keeps all options available. The discomfort of committing to one thing feels bigger than staying in limbo.","The direction is visible. Comfort is choosing the open option over the closed one. What does committing actually cost?","Staying undecided is comfortable because every option stays alive. What would you do if you had to pick right now?"],
+    'comfort+identity':   ["Comfort. The current version of yourself is familiar even if it is not working. Changing it means becoming someone unknown.","The identity you have is comfortable even if it is limiting. The version you want requires being uncomfortable with who you are becoming.","Comfort with the known self keeps the different self at arm's length."],
+    'comfort+mind':       ["Comfort. The loops are uncomfortable but they are known. Sitting in the not-knowing is harder than the noise.","The mental noise is familiar. Sitting in silence or uncertainty is less comfortable than the known anxiety.","You know this loop well. The comfort is in the familiarity of it, even though it hurts."],
+    'comfort+work':       ["Comfort. The hard task is avoided for the comfortable busy-work. The familiar low-stakes version instead of the actual thing.","Work avoidance is comfort-seeking. The easy tasks get done. The one that matters keeps getting deferred.","The work that is not getting done is uncomfortable. The work that is getting done is familiar. That is the pattern."],
+    'comfort+addiction':  ["Comfort. It reliably makes something feel better, even briefly. The discomfort of not having it feels worse than the cost of having it.","Comfort is the function. The discomfort of abstaining is acute; the cost of continuing is diffuse.","It works. That is the honest thing. It reliably delivers comfort. The question is what it is costing at the same time."],
+    'comfort+depression': ["Comfort. Even the heaviness has become familiar. The known weight over the unknown lighter thing.","The depression is heavy but known. The work of changing it is uncomfortable and uncertain. Comfort chooses the known.","There is comfort in the familiarity of the low state. That is not weakness — it is how comfort works."],
+    'worthiness+discipline': ["Worthiness underneath the discipline block. Something in you does not fully believe you should be doing this thing. That you have earned the right.","The discipline fails because part of you does not believe the goal is actually yours to have.","Worthiness is deciding whether you deserve to finish. That question keeps interrupting the doing."],
+    'worthiness+relation':   ["Worthiness in relationship. Something says you do not deserve to have this go well. Or that asking for what you need is too much.","The worthiness question in relationship: do you deserve the connection, the honesty, the limits you want?","Something says your needs are too much or that you do not deserve to have them met. Where did that come from?"],
+    'worthiness+direction':  ["Worthiness. The direction you want feels like it belongs to someone else. Someone more qualified, more ready, more deserving.","The path you want is visible. Worthiness is the question of whether you are allowed to take it.","You know where you want to go. The worthiness question is whether someone like you gets to go there."],
+    'worthiness+identity':   ["Worthiness is the identity question. Who you are underneath the performance. Do you feel like that person is enough?","The identity work is really a worthiness question. Am I enough, as I actually am, without the performance?","The version of yourself you are afraid to show — is it that you think it is not enough?"],
+    'worthiness+work':       ["Worthiness at work. Something says you do not deserve the thing you are going for. Or that if they knew the real version, they would not agree.","The work block has worthiness underneath it. The question is whether you deserve the outcome or the recognition.","Do you believe you are allowed to succeed at this? Not whether you can — whether you are allowed to."],
+    'worthiness+addiction':  ["Worthiness underneath this. Something says you do not deserve to feel okay without it. That the pain is what you are owed.","The belief that you do not deserve to feel well without it — that is worth looking at directly.","Worthiness and addiction: the idea that suffering is what you are owed, or that being okay without it is not something you get."],
+    'worthiness+depression': ["Worthiness. The depression can be fed by the belief that you do not deserve to feel well. That suffering is what you have earned.","The worthiness question inside depression: have you decided you do not deserve to feel okay?","Is there a belief underneath this that the depression is somehow what you deserve? That is worth naming."],
+    'control+direction':     ["Control underneath the direction question. The decision means accepting that the outcome is not certain. That uncertainty is the actual blocker.","Deciding requires releasing control of the outcome. The decision stays open because the result cannot be guaranteed.","You are not undecided. You are unwilling to accept that deciding does not guarantee the right outcome."],
+    'control+relation':      ["Control in relationship. If you say the honest thing, you lose control of how the other person responds. That is what you are protecting against.","Honesty means accepting that you cannot manage the reaction. Control keeps the conversation from happening.","The relationship dynamic is controlled by what you do not say. What would happen if you said the thing and accepted you cannot control what comes next?"],
+    'control+mind':          ["Control feeding the loop. The thoughts keep running because the mind is trying to control something it cannot. What is the thing?","The anxiety is a control mechanism that is not working. The mind keeps trying to think its way to certainty.","The loop is the mind trying to manage what it cannot manage. What is the specific thing it is trying to control?"],
+    'control+work':          ["Control at work. You are not moving because you cannot guarantee the result. What would you do if the outcome were already decided?","The work block is a control block. Not starting or finishing protects against the uncontrolled outcome.","What would you do right now if the result were already guaranteed — not perfect, just certain?"],
+    'rejection+relation':    ["Rejection in relationship. If you say the true thing or ask the real question, they might say no or react badly. That is the risk.","The relationship avoidance is rejection-protection. What is the specific thing you are afraid of hearing?","You are managing the risk of rejection by not putting the real thing on the table. What is the real thing?"],
+    'rejection+identity':    ["Rejection underneath the identity question. Being fully seen means risking that what they see is not acceptable.","The fear of being seen and then rejected for what is seen. That is the identity risk.","Showing the real version means it can be rejected. The performance is a protection against that."],
+    'rejection+direction':   ["Rejection of the direction you actually want. Committing to it means others can see it and judge it. The open option feels safer.","The direction stays open because stating it makes it available for rejection. What do you think they would say?","Committing to the direction makes it real and visible. Rejection becomes possible. That is the risk."],
+    'rejection+work':        ["Rejection at work. Asking, trying, or claiming the thing means someone could say no. The protection is to not ask.","The work block is rejection-avoidance. Not asking means no one can say no.","What is the specific thing you would ask for or try if you knew rejection was not possible?"],
+    'past+relation':         ["The past running the current relationship. An old story — about what relationships do, about what you deserve — is operating now.","Something from a previous relationship is running this one. The old script is still active.","The current dynamic is being shaped by a past dynamic. What is the old story?"],
+    'past+identity':         ["The past shaping the identity question. Who you were told you were, or what happened to you, is still running your self-concept.","The identity you carry now was written partly by what happened to you before. That version may not be current.","Who told you that you were the person you think you are? Is that still accurate?"],
+    'past+direction':        ["The past blocking direction. A previous failure, a previous path that did not work, is making this one feel impossible.","Something that did not work before is casting a shadow on this. What happened then that is making now feel unsafe?","The past direction that failed is making the current one feel dangerous. They are not the same."],
+    'past+work':             ["The past at work. A previous experience — of failure, of being let down, of trying and it not working — is running this block.","Something that happened at or around work before is shaping what feels possible now.","The old work experience is being applied to the current situation. Are they actually the same?"],
+    'pain+relation':         ["Pain in the relationship space. Something happened here or in a previous relationship that has not fully been processed. It is still running.","The relationship avoidance has pain underneath it. Something was hurt here or before that is still raw.","Pain is making this relationship space feel unsafe. What happened that has not fully been acknowledged?"],
+    'pain+depression':       ["Pain underneath the depression. The heaviness is not empty — there is something specific underneath it that has not been felt all the way.","The depression is covering something. The flatness is pain that stopped moving.","What is the specific thing that hurts underneath the numbness? It is in there."],
+    'pain+addiction':        ["Pain underneath the addiction. It reliably dulls or fills something. The question is what the underlying thing is.","The addiction is pain management. What is the specific pain it is managing?","What would be felt if the addiction was removed? That is the thing underneath."],
+    'emptiness+addiction':   ["Emptiness underneath this. Something is hollow, and this fills it temporarily. The cycle is: fill, empty, fill. What is the hollow about?","The addiction fills the emptiness for a while. Then the emptiness returns. The cycle continues because the source is not addressed.","What is the hollow about? Not what fills it — what is the shape of the empty thing?"],
+    'emptiness+depression':  ["Emptiness in the depression. The flatness, the absence. Not pain exactly — more like something that should be there is not.","The depression feels empty rather than painful. Something that should be present is absent. What is missing?","The emptiness in depression is not nothing — it is the absence of something specific. What is it?"],
+    'emptiness+relation':    ["Emptiness in the relationship space. Something is missing in the connection, or you are going through the motions without the actual thing.","The relationship has a hollow in it. Something is present but the essential thing is not there.","What is the thing that is missing from this connection? Not what you want to add — what is fundamentally absent?"],
+    'emptiness+direction':   ["Emptiness underneath the direction question. The thing you are pursuing does not feel like it will fill it. The question is what would.","The direction you are considering does not feel like it will solve the emptiness. What do you think would?","The hollow feeling and the direction question are connected. What would you pursue if filling the emptiness was the goal?"],
+    'worthiness+mind':       ["Worthiness feeding the mental loop. Something underneath believes you do not deserve to be free of the anxiety.","The loop keeps running partly because something says you deserve to struggle. That belief is worth looking at.","Worthiness and mind: the idea that the anxiety is somehow what you have earned."],
+    'control+discipline':    ["Control underneath the discipline block. You are not starting or finishing because you cannot control the outcome.","The discipline fails when control is not possible. You do the task only when you can manage how it turns out.","Control is the real discipline block. What would you do if the outcome were already decided?"],
+    'control+identity':      ["Control in identity. You manage the version of yourself others see because the response to the real version is not controllable.","The identity question is a control question. Showing the real self means losing control of how you are perceived.","You curate who you show because you cannot control what happens when you show the unmanaged version."],
+    'control+addiction':     ["Control and addiction are linked. The behaviour is partly about managing internal states.","The addiction is a control mechanism. It reliably produces a specific state. The alternative is states you cannot manage.","Control underneath this. The uncertainty of not having it feels less controllable than the cost of having it."],
+    'control+depression':    ["Control and depression. Sometimes the low state is the only thing that feels stable in an unpredictable situation.","The depression can be fed by trying to control things that cannot be controlled. The exhaustion of managing the unmanageable.","What specifically are you trying to control right now that is not controllable?"],
+    'rejection+discipline':  ["Rejection underneath the discipline block. If you finish something visible, it can be rejected or judged. Not finishing protects against that.","The discipline problem has rejection underneath it. Completing the thing makes it available for judgment.","You avoid finishing because doing so makes the output visible. Visible means judgeable."],
+    'rejection+mind':        ["Rejection feeding the loop. The mental spiral often circles around scenarios where you are rejected or found lacking.","The anxiety keeps returning to rejection scenarios. What is the specific rejection your mind keeps rehearsing?","The loop is rejection-focused. The mind keeps preparing for a no that may or may not come."],
+    'rejection+addiction':   ["Rejection underneath this. The behaviour manages the pain of real or anticipated rejection.","Something about being rejected is part of what drives this. What is the specific rejection underneath?","Rejection and addiction: using the behaviour to manage the pain of not being accepted."],
+    'rejection+depression':  ["Rejection feeding the depression. The heaviness is partly about feeling unwanted, unseen, or turned away.","The depression has rejection in it. Something about not being accepted is running underneath.","What is the specific rejection that is part of what makes this so heavy?"],
+    'past+discipline':       ["The past blocking the discipline. A previous failure is making this feel dangerous or pointless.","A previous experience with this kind of effort is casting a shadow. What happened then?","The past is making the present attempt feel pre-failed. What is the old story playing?"],
+    'past+mind':             ["The past feeding the loop. The thoughts keep returning to old events, old scenarios.","The mental spiral keeps going backward. What is the past event the mind keeps returning to?","The loop is past-fed. Something that happened is being rehearsed repeatedly. What is it?"],
+    'past+addiction':        ["The past underneath this. Something that happened before is part of what the behaviour is managing.","A past experience is part of the root of this. What happened that this behaviour has been a response to?","The addiction is partly about the past. What is the thing that happened that has not been fully addressed?"],
+    'past+depression':       ["The past underneath the depression. Something from before is still present in the heaviness.","The depression is carrying something from before. What is the specific past thing that is still in it?","An old grief or loss is part of what makes the present feel this heavy."],
+    'pain+discipline':       ["Pain underneath the discipline block. Something hurts when you do this work, or the work touches something raw.","The task connects to something painful. Starting or finishing brings up something unprocessed.","What is the pain that gets activated when you try to do this thing?"],
+    'pain+direction':        ["Pain underneath the direction question. A previous path that ended painfully is making the new one feel dangerous.","Something about the last time you committed to a direction hurt. That pain is in the current hesitation.","What is the specific pain from a previous direction that is making this one feel unsafe?"],
+    'pain+identity':         ["Pain underneath the identity question. Something happened that changed how you see yourself.","The identity you carry has pain in it. Who you think you are was partly written by something that hurt.","What is the painful thing that shaped the version of yourself you are currently carrying?"],
+    'pain+mind':             ["Pain feeding the loop. The mental spiral keeps returning to painful memories, painful beliefs.","The anxiety is pain-driven. The mind keeps touching the raw thing.","What is the specific painful thing the loop keeps returning to?"],
+    'pain+work':             ["Pain underneath the work block. Something about this domain carries pain.","A previous experience at work that hurt is making the current situation feel dangerous.","What happened at work before that is making this feel loaded?"],
+    'emptiness+discipline':  ["Emptiness underneath the discipline block. The effort feels pointless because it does not lead anywhere that fills the hollow.","The task does not feel connected to anything that matters. The emptiness makes it hard to find a reason to do it.","What would make this effort feel worth doing?"],
+    'emptiness+identity':    ["Emptiness in the identity question. Not knowing who you are can feel like nothing is there.","The identity question might be an emptiness question. What do you think is supposed to be there that is not?","Who would you be if the emptiness was filled? That might be the clearest picture of what you are looking for."],
+    'emptiness+mind':        ["Emptiness feeding the loop. The mental spiral might be trying to fill the hollow with activity.","The anxiety keeps running partly to avoid sitting with the emptiness. What is underneath the noise?","The loop and the emptiness are connected. Sitting with the quiet means sitting with the hollow."],
+    'emptiness+work':        ["Emptiness underneath the work block. The effort does not feel connected to anything that fills the hollow.","The work feels meaningless in a way that goes beyond the specific task. What would make it feel like it matters?","The emptiness is making the work feel pointless. What would you need this work to give you?"],
+  };
+  // Use session count to rotate through the 3 variants for each combo
+  var rootAreaKey = sess.root + '+' + sess.area;
+  var raPool = ROOT_AREA_POOL[rootAreaKey];
+  var ROOT_AREA_FIRST = {};
+  if (raPool) {
+    ROOT_AREA_FIRST[rootAreaKey] = raPool[rootCt % raPool.length];
+  }
+  var ROOT_FIRST_POOL = {
+    fear:       ["Fear. That is honest. It takes something to say that.",
+                 "Fear is the root. That is the clearest answer you can give. What specifically is threatened?",
+                 "You named fear. Most people call it something else. What is it about specifically?"],
+    comfort:    ["Comfort. The known feels safer than the unknown. That is a very human trap.",
+                 "Comfort is the root. The familiar is winning over the real. What specifically is the comfortable option?",
+                 "You chose comfort. That is honest. What is the uncomfortable thing you are choosing against?"],
+    worthiness: ["Worthiness. That one runs deep in a lot of people. It is worth looking at.",
+                 "Worthiness. The question of whether you deserve to act, to have this, to be here. That is a real thing.",
+                 "You named worthiness. That is a deeper answer than most people give. Where does that idea come from?"],
+    control:    ["Control. The need for certainty before moving. That is a real block.",
+                 "Control. You need to know how it ends before you will start. What specifically are you trying to prevent?",
+                 "You named control. The certainty requirement. What is the worst version of losing control here?"],
+    rejection:  ["Rejection. Protecting yourself from a no. That shapes a lot of decisions.",
+                 "Rejection. The shield against being turned away. Whose rejection are you specifically protecting against?",
+                 "You named rejection. The no that you are trying to prevent. What would that no actually mean about you?"],
+    past:       ["The past. An old story is still running. That is worth naming.",
+                 "The past. Something from before is operating in the present. Which story is it?",
+                 "You named the past. An old pattern is running now. How old is that story?"],
+    pain:       ["Pain. Something that has not been fully processed. That is real.",
+                 "Pain. Something that has not been felt all the way through. How long has it been sitting there?",
+                 "You named pain. That is honest. Where is it sitting — when did this start?"],
+    emptiness:  ["Emptiness. Something is missing or something needs to go. Either way, that is real.",
+                 "Emptiness. The hollow that keeps showing up. What used to fill it, or what should be there?",
+                 "You named emptiness. That is a specific feeling — not sadness, not fear, but absence. What is missing?"],
+  };
+  var ROOT_FIRST = {};
+  Object.keys(ROOT_FIRST_POOL).forEach(function(k){
+    var pool = ROOT_FIRST_POOL[k];
+    ROOT_FIRST[k] = pool[rootCt % pool.length];
+  });
+  var ROOT_REPEAT_POOL = {
+    fear:       ["Fear again. It has been the answer before. It is consistent.",
+                 "Fear has come up before. The pattern is holding. What specifically is the fear here today?",
+                 "Fear, again. Not surprising — it keeps showing up for you. Where is it sitting today?"],
+    comfort:    ["Comfort again. The pull toward the familiar is strong in you.",
+                 "Comfort keeps being the root. The known feels safer than the real — that is consistent for you.",
+                 "Comfort again. You keep choosing the familiar over the uncomfortable. What would the uncomfortable option actually cost you?"],
+    worthiness: ["Worthiness again. This one keeps coming up. It is worth taking seriously.",
+                 "Worthiness has been here before. The 'I am not ready yet' story is running again.",
+                 "Worthiness again. The idea that you have to earn the right to act — it keeps showing up."],
+    control:    ["Control again. The need to know before moving keeps showing up.",
+                 "Control has been the root before. The certainty requirement is still in place.",
+                 "Control again. You keep needing to know how it ends before you will start."],
+    rejection:  ["Rejection again. You keep protecting against the no.",
+                 "Rejection has been here before. The shield against being turned away is still up.",
+                 "Rejection again. The fear of someone saying no keeps shaping what you do and do not do."],
+    past:       ["The past again. That story is still running.",
+                 "The past keeps coming up as the root. Something from before is still driving now.",
+                 "The past again. The old story has not let go — or you have not let go of it."],
+    pain:       ["Pain again. Something unprocessed is still there.",
+                 "Pain keeps being the root. Something has not been felt all the way through.",
+                 "Pain again. The unprocessed thing is still running underneath."],
+    emptiness:  ["Emptiness again. The hollow keeps showing up.",
+                 "Emptiness has been the root before. The missing thing — or the thing that needs to go — is still there.",
+                 "Emptiness again. The hollow that keeps getting filled — and unfilled."],
+  };
+  var ROOT_3PLUS_POOL = {
+    fear:       [cap(sess.root)+" has been the answer "+rootCt+" times now. That is the pattern.",
+                 "Fear — "+rootCt+" times now. It is not occasional. It is the default.",
+                 rootCt+" sessions, same root: fear. That is not a coincidence. That is how you are wired right now."],
+    comfort:    [cap(sess.root)+" has been the answer "+rootCt+" times. Comfort is the consistent pull.",
+                 "Comfort — "+rootCt+" times as the root. The pull toward the familiar is stronger than you have admitted.",
+                 rootCt+" sessions with comfort at the root. That is the pattern holding everything else in place."],
+    worthiness: ["Worthiness — "+rootCt+" times now. The 'not ready yet' story is running the show.",
+                 rootCt+" sessions, same root: worthiness. The question of whether you deserve to act has not been answered.",
+                 "Worthiness "+rootCt+" times. At what point does knowing it stop being insight and start being a stall?"],
+    control:    ["Control — "+rootCt+" times as the root. The certainty requirement keeps blocking movement.",
+                 rootCt+" sessions with control at the root. The need to know how it ends before you start is consistent.",
+                 "Control "+rootCt+" times. That is not caution — that is a pattern."],
+    rejection:  ["Rejection — "+rootCt+" times now. The protection against the no is constant.",
+                 rootCt+" sessions, same root: rejection. The shield is not lowering.",
+                 "Rejection "+rootCt+" times as the root. Something about being turned away shapes almost everything."],
+    past:       ["The past — "+rootCt+" times as the root. The old story is still running the present.",
+                 rootCt+" sessions with the past at the root. Something from before is driving more than you have admitted.",
+                 "The past "+rootCt+" times. That story is old. It is still running."],
+    pain:       ["Pain — "+rootCt+" times now. The unprocessed thing is persistent.",
+                 rootCt+" sessions with pain at the root. Something has not been fully felt or released.",
+                 "Pain "+rootCt+" times as the root. The door to this has not been fully opened."],
+    emptiness:  ["Emptiness — "+rootCt+" times now. The hollow is consistent.",
+                 rootCt+" sessions with emptiness at the root. The missing thing — or the thing that needs to go — keeps surfacing.",
+                 "Emptiness "+rootCt+" times. The cycle of fill and empty is running."],
+  };
+  var rootRepeatIdx = rootCt % 3;
+  var rootHighIdx   = (rootCt - 3) % 3;
   if (rootCt >= 3) {
-    await mirrorSays(cap(sess.root)+" has been the answer "+rootCt+" times now.");
+    var pool3 = ROOT_3PLUS_POOL[sess.root];
+    var ROOT3_FALLBACK = [
+      cap(sess.root)+" has been the answer "+rootCt+" times now. That is the pattern.",
+      rootCt+" times the root has been "+cap(sess.root)+". That is not occasional.",
+      cap(sess.root)+" — "+rootCt+" sessions. Consistent.",
+    ];
+    await mirrorSays(pool3 ? pool3[rootHighIdx] : ROOT3_FALLBACK[rootCt % ROOT3_FALLBACK.length]);
+    await pause(500);
+  } else if (rootCt >= 1) {
+    // 2nd or 3rd time with same root — use ROOT_REPEAT
+    var poolR = ROOT_REPEAT_POOL[sess.root];
+    await mirrorSays(poolR ? poolR[rootRepeatIdx % poolR.length] : cap(sess.root)+" has come up before.");
+    await pause(500);
+  } else {
+    var rootAreaKey = sess.root + '+' + sess.area;
+    var rootAreaLine = ROOT_AREA_FIRST[rootAreaKey] || ROOT_FIRST[sess.root] || cap(sess.root)+". That is the root.";
+    await mirrorSays(rootAreaLine);
     await pause(500);
   }
 
+  // Follow-up deep question — avoid repeating the same question for same root
   var fups = FOLLOWUPS[sess.root] || [];
-  var fq = rnd(fups);
+  var usedFollowups = sessions.filter(function(s){ return s.root===sess.root && s.followup; }).map(function(s){ return s.followup; });
+  var freshFups = fups.filter(function(q){ return usedFollowups.indexOf(q) === -1; });
+  var fq = freshFups.length ? rnd(freshFups) : rnd(fups);
   if (fq) {
     await pause(300);
     await mirrorSays(fq, 15);
     await pause(300);
-    noteMsg("Take a moment with that.");
+    var TAKE_NOTE = [
+      "Take a moment with that.",
+      "Sit with that before answering.",
+      "Do not rush past that one.",
+      "That one is worth actually feeling.",
+      "Stay there for a second.",
+    ];
+    noteMsg(TAKE_NOTE[n % TAKE_NOTE.length]);
     await pause(700);
     sess.followup = fq;
   }
 
   updateProg(66);
 
+  // STEP 4 — Honesty check — preamble and question rotate
   await pause(600);
-  await mirrorSays("One more thing.");
+  var HON_PRE = [
+    "One more thing.",
+    "Before you go — one honest question.",
+    "Last check.",
+    "One thing I need to ask you.",
+    "Be straight with me on this.",
+  ];
+  await mirrorSays(HON_PRE[n % HON_PRE.length]);
   await pause(500);
-  await mirrorSays("Be honest: is this the first time you have realised this — or have you known for a while?");
+  var HON_Q = [
+    "Be honest: is this the first time you have realised this — or have you known for a while?",
+    "How long have you actually known this was the issue?",
+    "Is this a genuine realisation — or is this familiar territory you have been circling?",
+    "Have you been here before with this? Or is this actually new?",
+    "When did you first know this was the thing? Be honest.",
+  ];
+  await mirrorSays(HON_Q[n % HON_Q.length]);
   await pause(200);
 
+  var HON_SUBS = {
+    new:    ['I had not seen it this clearly','This angle is genuinely new','Fresh realisation'],
+    known:  ['For a while, actually','Longer than I want to admit','Yes, I have known'],
+    mostly: ['Some of it, not all','Parts of it, yes','Somewhere in between'],
+    buried: ['I knew and chose not to look','I looked away','I was aware and avoided it'],
+  };
   var honOpts = [
-    {v:'new',    l:'Genuinely new',     s:'I had not seen it this clearly'},
-    {v:'known',  l:'I have known',      s:'For a while, actually'},
-    {v:'mostly', l:'Somewhere between', s:'Some of it, not all'},
-    {v:'buried', l:'I buried it',       s:'I knew and chose not to look'},
+    {v:'new',    l:'Genuinely new',     s:HON_SUBS.new[n % HON_SUBS.new.length]},
+    {v:'known',  l:'I have known',      s:HON_SUBS.known[n % HON_SUBS.known.length]},
+    {v:'mostly', l:'Somewhere between', s:HON_SUBS.mostly[n % HON_SUBS.mostly.length]},
+    {v:'buried', l:'I buried it',       s:HON_SUBS.buried[n % HON_SUBS.buried.length]},
   ];
   var honOpt = await askOpts(honOpts);
   sess.honesty = honOpt.v;
   userSaid(honOpt.l);
   await pause(600);
 
-  var honResp = {
-    new:    "Then this is a real moment. Hold it.",
-    known:  "Knowing and doing something about it are two different things. That gap is what you are here for.",
-    mostly: "The parts you already knew — those are the ones worth staying with.",
-    buried: "That takes honesty to say. You buried it and it surfaced anyway. It always does.",
+  var HON_RESP_POOL = {
+    new:    ["Then this is a real moment. Hold it.",
+             "New clarity is rare. Do not let this one pass.",
+             "Genuinely new is good. It means the mirror is working. Stay with it."],
+    known:  ["Knowing and doing something about it are two different things. That gap is what you are here for.",
+             "You have known. The question is what you are doing with that knowledge.",
+             "Known for a while — that is the harder version to sit with. Knowing and not acting is its own thing."],
+    mostly: ["The parts you already knew — those are the ones worth staying with.",
+             "Somewhere between means the honest part is already in there. The part you already knew — that is the one.",
+             "The fuzzy middle usually means you know more than you are admitting. What is the part that is not fuzzy?"],
+    buried: ["That takes honesty to say. You buried it and it surfaced anyway. It always does.",
+             "Buried but still here. That is how it works — you can push it down but it keeps coming back.",
+             "You knew and looked away. That is not failure — that is human. But now you are looking. That is different."],
   };
-  await mirrorSays(honResp[honOpt.v] || "Good.");
+  // Cross-reference honesty answer against session history
+  var honFinalLine;
+  if (honOpt.v === 'new' && (avoidCt >= 2 || rootCt >= 2)) {
+    // They say new but they have been here before — call it out specifically
+    var crossRef = [];
+    if (avoidCt >= 2 && rootCt >= 2) {
+      crossRef = [
+        'Genuinely new — but you have come back to "'+sess.avoid+'" '+avoidCt+' times with '+cap(sess.root)+' as the root. Something feels new. It is worth asking whether you are seeing a new angle, or whether you have been circling it long enough that it feels new again.',
+        'New this time. Though "'+sess.avoid+'" has appeared '+avoidCt+' times. The clarity might be real — or the pattern might be familiar enough to keep arriving as a surprise.',
+      ];
+    } else if (avoidCt >= 2) {
+      crossRef = [
+        'New clarity — though "'+sess.avoid+'" has come up '+avoidCt+' times now. If it is genuinely new, hold it. If it is the same thing arriving again with a feeling of freshness — that is worth noticing too.',
+        'New. Though you have been to "'+sess.avoid+'" before. Real new clarity still counts. Just make sure this one lands differently than the last time.',
+      ];
+    } else if (rootCt >= 2) {
+      crossRef = [
+        'New this time. Though '+cap(sess.root)+' has been the root before. The angle might be new. The pattern underneath may not be.',
+        'New clarity, but '+cap(sess.root)+' has appeared '+rootCt+' times. That root is familiar. What specifically feels new today?',
+      ];
+    }
+    honFinalLine = crossRef.length ? crossRef[n % crossRef.length] : HON_RESP_POOL['new'][n % 3];
+  } else if (honOpt.v === 'mostly' && (avoidCt >= 2 || rootCt >= 2)) {
+    honFinalLine = 'Somewhere between — and you have been to "'+sess.avoid+'" before. The part you already knew is the part worth staying with. The new angle is a bonus. The known part is what you came here for.';
+  } else {
+    var honPool = HON_RESP_POOL[honOpt.v] || ["Good."];
+    honFinalLine = honPool[n % honPool.length];
+  }
+  await mirrorSays(honFinalLine);
   await pause(500);
   updateProg(77);
 
+  // STEP 5 — Mood — question rotates
   await pause(500);
-  await mirrorSays("How are you right now — honestly?");
+  var MOOD_Q = [
+    "How are you right now — honestly?",
+    "Energy check — where are you today?",
+    "How is the state of you right now?",
+    "Before we close — how are you actually feeling?",
+    "What is the honest energy level today?",
+  ];
+  await mirrorSays(MOOD_Q[n % MOOD_Q.length]);
   await pause(200);
   var moodVal = await askMood();
   sess.mood = moodVal;
@@ -1197,42 +1961,231 @@ async function runConversation() {
 
   var moodLine;
   if (sess.area === 'depression' && moodVal <= 3) {
-    moodLine = "Low and still here. That is not nothing — that is actually something.";
+    var depLow = ["Low and still here. That is not nothing.", "You came when it was hard to. That matters.", "Low energy, still looking. That is the harder version of this."];
+    moodLine = depLow[sessions.length % depLow.length];
+  } else if (sess.area === 'depression' && moodVal >= 7) {
+    var depHigh = [
+      "A clearer day. Use it to look at what the harder days make invisible.",
+      "Higher energy today. Depression does not disappear on the clearer days — it goes quieter. Use that quiet.",
+      "Decent today. The work done on the hard days carries. This is one of the payoffs.",
+    ];
+    moodLine = depHigh[sessions.length % depHigh.length];
+  } else if (sess.area === 'addiction' && moodVal >= 7) {
+    var addHigh = [
+      "Clear energy today. Use it. The higher the energy, the more real the decisions you can make.",
+      "Good energy with a hard topic. That combination is useful. Do not waste it.",
+      "Today is easier. The work you do on easier days is different. More honest sometimes.",
+    ];
+    moodLine = addHigh[sessions.length % addHigh.length];
   } else if (sess.area === 'addiction' && moodVal <= 3) {
-    moodLine = "Low energy, hard topic, still looking at it. That counts.";
-  } else if (moodVal <= 3) {
-    moodLine = "Low energy and honest reflection — that is a hard combination. You did it anyway.";
-  } else if (moodVal >= 8) {
-    moodLine = "That energy — use it. Do not let this moment soften before you act.";
+    var addLow = ["Low energy, hard topic, still here. That counts.", "The hardest sessions are the most honest ones.", "Low and showing up anyway. That is the move."];
+    moodLine = addLow[sessions.length % addLow.length];
+  } else if (moodVal <= 2) {
+    var veryLow = ["Really low. The fact that you are here anyway is worth noting.", "That is a hard place to reflect from. You did it anyway.", "Low energy and honest — that combination is harder than it looks."];
+    moodLine = veryLow[sessions.length % veryLow.length];
+  } else if (moodVal <= 4) {
+    var low = ["Low energy and honest reflection — that is a hard combination. You did it anyway.", "Not an easy day. Doing this on a hard day is different from doing it on an easy one.", "Showing up when it is low — that is worth more than showing up when it is easy."];
+    moodLine = low[sessions.length % low.length];
+  } else if (moodVal >= 9) {
+    var high = ["Clear energy. Do not let this moment pass without acting on something.", "That clarity — it will not always be there. Use it now.", "High energy and honest reflection — rare combination. Make it count."];
+    moodLine = high[sessions.length % high.length];
+  } else if (moodVal >= 7) {
+    var decent = ["That energy — use it. Do not let this moment soften before you act.", "Decent place to reflect from. Stay honest.", "Good energy. The mirror is clearer when you are not running on empty."];
+    moodLine = decent[sessions.length % decent.length];
   } else {
-    moodLine = "You showed up as you are. That is enough.";
+    var mid = ["You showed up as you are. That is enough.", "Middle of the road. That is still showing up.", "Not high, not low. Honest enough to be here. That works."];
+    moodLine = mid[sessions.length % mid.length];
   }
   await mirrorSays(moodLine);
   await pause(500);
   updateProg(88);
 
+  // STEP 6 — Write
   await pause(500);
-  await mirrorSays("Last thing.");
+  var LAST_THING = [
+    "Last thing.",
+    "One more — and it is the most important one.",
+    "Almost done. One last question.",
+    "Before you go — write this out.",
+    "The last and most honest part.",
+  ];
+  await mirrorSays(LAST_THING[n % LAST_THING.length]);
   await pause(300);
-  if (sess.area === 'depression') {
-    await mirrorSays("The thing you have not been able to say to anyone. Write it here. Just for you.");
-  } else if (sess.area === 'addiction') {
-    await mirrorSays("What is the thing you keep not saying out loud about this? Write it. Just for you.");
-  } else {
-    await mirrorSays("The sentence you have not said out loud yet. Write it. Just for you.");
-  }
+  var WRITE_PROMPT_POOL = {
+    discipline: [
+      "The real reason you have not started or finished — the one you have not said out loud. Write it.",
+      "What is the honest version of why the discipline is not landing? Not the surface answer. The real one.",
+      "Write the sentence that explains — actually explains — why this keeps not happening.",
+    ],
+    relation:   [
+      "The thing you have not said to that person — or to yourself about them. Write it here.",
+      "What is the sentence you would say to them if there were no consequences? Write that.",
+      "What do you actually think and feel about this situation that you have not let yourself say? Write it.",
+    ],
+    direction:  [
+      "The decision or truth you are circling but not landing on. Write the actual version of it.",
+      "What is the direction you actually want — not the one that seems safe or sensible? Write it.",
+      "Write the thing you know you should do but have not committed to saying yet.",
+    ],
+    identity:   [
+      "The thing you believe about yourself that you have not admitted yet. Write it. Just for you.",
+      "What is the most honest sentence you could write about who you actually are right now?",
+      "Write the thing about yourself you are least willing to put into words.",
+    ],
+    mind:       [
+      "The thought that keeps coming back that you keep pushing away. Write it out fully.",
+      "What is the thing your mind keeps returning to that you keep trying not to think? Write it here.",
+      "Write the loop. Not a summary — the actual thought, the way it actually arrives.",
+    ],
+    work:       [
+      "The real reason this is not getting done — not the surface one. Write the honest version.",
+      "What is the thing about this work situation that you have not admitted even to yourself?",
+      "Write the sentence that would explain everything — about the block, the avoidance, the real thing.",
+    ],
+    addiction:  [
+      "What is the thing you keep not saying out loud about this? Write it. Just for you.",
+      "Write the sentence about this that you have never said to anyone — not even yourself fully.",
+      "What would you write if you were completely honest — no softening, no justifying?",
+    ],
+    depression: [
+      "The thing you have not been able to say to anyone. Write it here. Just for you.",
+      "What is the sentence that would take the most courage to write? Write that one.",
+      "Write what it actually feels like right now — not the managed version. The real one.",
+    ],
+  };
+  var wpPool = WRITE_PROMPT_POOL[sess.area] || [
+    "The sentence you have not said out loud yet. Write it. Just for you.",
+    "What is the most honest thing you could write right now?",
+    "Write the thing you came here already knowing but have not said yet.",
+  ];
+  await mirrorSays(wpPool[n % wpPool.length]);
   await pause(300);
   var writeVal = await askWrite();
   sess.write = writeVal;
 
+  // Closing line
   await pause(600);
   var closingPool = (SENSITIVE_AREAS[sess.area]) ? CLOSING_SENSITIVE : CLOSING;
-  var closing = rnd(closingPool);
+  var areaCode = sess.area.split('').reduce(function(a,ch){ return a+ch.charCodeAt(0); },0);
+  var closingIdx = (n * 7 + areaCode) % closingPool.length;
+  var closing = closingPool[closingIdx];
   var closingDiv = appendMsg('msg-done', '');
   await typeInto(closingDiv, closing, 18);
+  await pause(1000);
+
+  // Final beat — recognition of the act, not praise for it
+  // Varies by area, depth, and whether they wrote something honest
+  var depth = calcDepth(sessions);
+  var wroteHonestly = sess.write && sess.write.length > 20;
+  var admittedKnew = sess.honesty === 'known' || sess.honesty === 'buried';
+  var isRepeat = avoidCt >= 2 || rootCt >= 2;
+
+  // Final beat — specific to what they actually named today
+  // References area + avoidance + root so it feels like the mirror saw the session
+  var avoidLabel = cap(sess.avoid);
+  var rootLabel  = cap(sess.root);
+  var areaLabel  = cap(sess.area);
+
+  var finalLine;
+
+  if (SENSITIVE_AREAS[sess.area] && admittedKnew) {
+    // Came here with depression/addiction AND admitted they already knew
+    var pool = [
+      "You named "+rootLabel.toLowerCase()+" as the root of "+avoidLabel.toLowerCase()+" — and you admitted you have known that. Coming here anyway, with that level of honesty, is not small.",
+      "You have been carrying "+avoidLabel.toLowerCase()+" with "+rootLabel.toLowerCase()+" underneath it. You said that out loud today. That is further than most people get with this.",
+      "You came here with "+areaLabel.toLowerCase()+" and named it honestly — including the part where you already knew. That kind of clarity is rare.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else if (SENSITIVE_AREAS[sess.area]) {
+    // Came here with depression/addiction
+    var pool = [
+      "You looked directly at "+avoidLabel.toLowerCase()+" in "+areaLabel.toLowerCase()+" today. Most people with this never do that.",
+      ""+areaLabel+" and "+avoidLabel.toLowerCase()+" — you named both. A lot of people carry this without ever putting words to it.",
+      "You came here with "+areaLabel.toLowerCase()+" and did not look away from "+avoidLabel.toLowerCase()+". That took something real.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else if (depth >= 6 && isRepeat) {
+    // Deep AND repeating — they really know this pattern
+    var pool = [
+      "You have been to "+avoidLabel.toLowerCase()+" — rooted in "+rootLabel.toLowerCase()+" — multiple times now. You are not confused about the pattern. The question is what you do with that.",
+      avoidCt+" sessions with "+avoidLabel.toLowerCase()+", "+rootLabel.toLowerCase()+" at the root. You know this loop. Depth "+depth+". You are not avoiding the mirror anymore.",
+      "You know it is "+rootLabel.toLowerCase()+" underneath "+avoidLabel.toLowerCase()+". You have known for a while. Coming back to look at it anyway — that is what depth "+depth+" looks like.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else if (depth >= 6) {
+    // High depth, new or fresh territory
+    var pool = [
+      "You named "+avoidLabel.toLowerCase()+" in "+areaLabel.toLowerCase()+", rooted in "+rootLabel.toLowerCase()+". That specific combination, said out loud — most people never get there.",
+      "Depth "+depth+". "+areaLabel+", "+avoidLabel.toLowerCase()+", "+rootLabel.toLowerCase()+". You looked at the whole thing.",
+      "Getting to "+rootLabel.toLowerCase()+" as the root of "+avoidLabel.toLowerCase()+" takes real honesty. You did not stop at the surface answer.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else if (admittedKnew && isRepeat) {
+    // Knows this is a repeat AND admitted they've known the whole time
+    var pool = [
+      "You said you have known about "+avoidLabel.toLowerCase()+" for a while. You have been here "+avoidCt+" times. At some point the knowing has to become something else.",
+      ""+avoidCt+" sessions with "+avoidLabel.toLowerCase()+" and you admitted you already knew. That gap between knowing and moving — you are sitting right in it.",
+      "You named it: "+rootLabel.toLowerCase()+" underneath "+avoidLabel.toLowerCase()+". You know. You have known. Today you said that out loud. That is different from just knowing.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else if (admittedKnew) {
+    // First or second time, but admitted they already knew
+    var pool = [
+      "You said you have known it was "+rootLabel.toLowerCase()+" underneath this. Saying that out loud — not softening it — is the harder thing.",
+      "Naming "+avoidLabel.toLowerCase()+" and admitting you already knew the root was "+rootLabel.toLowerCase()+" — that honesty is what the mirror is for.",
+      "You did not pretend this was new. You said you have known. That is a harder answer to give.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else if (wroteHonestly && isRepeat) {
+    // Wrote something AND it is a repeat pattern
+    var pool = [
+      "You wrote the thing and you kept coming back to "+avoidLabel.toLowerCase()+". Both of those together — that is real work.",
+      "You put "+avoidLabel.toLowerCase()+" into words again, and wrote the honest version of it. That is not nothing.",
+      "Coming back to "+avoidLabel.toLowerCase()+" and actually writing — that is the session that matters.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else if (wroteHonestly) {
+    // Wrote something honest
+    var pool = [
+      "You named "+avoidLabel.toLowerCase()+" as the thing, "+rootLabel.toLowerCase()+" as the root, and then you wrote the honest version. That is the full loop.",
+      "You said the thing out loud — "+avoidLabel.toLowerCase()+", "+rootLabel.toLowerCase()+", and then the part you wrote. Most people stop before that last step.",
+      "Writing it down after naming "+rootLabel.toLowerCase()+" as the root — you did not stop at the comfortable version.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else if (isRepeat) {
+    // Pattern repeating, no special honesty this time
+    var pool = [
+      "You came back to "+avoidLabel.toLowerCase()+" again. The fact that you keep showing up to look at this — that is the thing.",
+      ""+avoidCt+" times here with "+avoidLabel.toLowerCase()+". You have not stopped looking at it. That matters.",
+      "Still looking at "+avoidLabel.toLowerCase()+" in "+areaLabel.toLowerCase()+". You have not walked away from the hard one.",
+    ];
+    finalLine = pool[n % pool.length];
+
+  } else {
+    // First session or entirely new territory
+    var pool = [
+      "You named "+avoidLabel.toLowerCase()+" in "+areaLabel.toLowerCase()+" and got to "+rootLabel.toLowerCase()+" as the root. That is further than most people go on the first pass.",
+      ""+areaLabel+", "+avoidLabel.toLowerCase()+", "+rootLabel.toLowerCase()+". You said the whole thing. That is what the mirror is for.",
+      "First time naming "+avoidLabel.toLowerCase()+" with "+rootLabel.toLowerCase()+" underneath it. The mirror has something to work with now.",
+    ];
+    finalLine = pool[n % pool.length];
+  }
+
+  await pause(500);
+  var finalDiv = appendMsg('msg-done', '');
+  await typeInto(finalDiv, finalLine, 22);
   await pause(800);
   updateProg(100);
 
+  // Save
   sess.date = today();
   sess.ts = Date.now();
   var d2 = load();
@@ -1244,6 +2197,7 @@ async function runConversation() {
 
   await pause(1400);
 
+  // Update mirror session number before showing
   document.getElementById('mir-sess-n').textContent = d2.sessions.length;
   renderMirror(d2);
   showScreen('s-mirror');
@@ -1252,6 +2206,9 @@ async function runConversation() {
   fetchInsight(d2);
 }
 
+// ═══════════════════════════════════════════════
+// MIRROR SCREEN
+// ═══════════════════════════════════════════════
 function renderMirror(d) {
   var sessions = d.sessions;
   var total = sessions.length;
@@ -1278,25 +2235,36 @@ function renderMirror(d) {
     cells.appendChild(c);
   });
 
+  // Insight — loading state (cursor-safe)
   var ib = document.getElementById('insight-block');
   ib.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
 
+  // Loop reveal
   var loop = getLoop(s.root, s.avoid);
   var lr = document.getElementById('loop-reveal');
   if (loop && avoidCt >= 2) {
     lr.classList.add('show');
     var savedName = d.loopName;
     document.getElementById('loop-reveal-name').textContent = savedName || loop.name;
-    document.getElementById('loop-reveal-desc').textContent = loop.desc;
+    document.getElementById('loop-reveal-desc').textContent = getLoopDesc(loop, avoidCt);
     document.getElementById('loop-rename-in').value = savedName || '';
     document.getElementById('loop-rename-in').placeholder = loop.name;
   } else {
     lr.classList.remove('show');
   }
 
+  // Commitment reset
   var ci = document.getElementById('commit-in');
   var cs = document.getElementById('commit-saved');
   var cb = document.querySelector('.commit-box .btn-cta');
+  var COMMIT_PH = [
+    "Be specific. One sentence.",
+    "What exactly will you do, and when?",
+    "Name the action. Not the intention.",
+    "One concrete thing — not a feeling, an action.",
+    "What specifically are you committing to?",
+  ];
+  ci.placeholder = COMMIT_PH[total % COMMIT_PH.length];
   ci.value = ''; ci.disabled = false;
   cs.style.display = 'none';
   if (cb) cb.style.display = '';
@@ -1307,11 +2275,66 @@ function buildStatement(s, avoidCt, rootCt, total) {
     return 'In <em>'+cap(s.area)+'</em>, you are facing <em>'+cap(s.avoid)+'</em> — rooted in <em>'+cap(s.root)+'</em>. First session. The mirror builds from here.';
   }
   if (avoidCt >= 3 && rootCt >= 3) {
-    return 'You have come back to <em>'+cap(s.avoid)+'</em> '+avoidCt+' times, always rooted in <em>'+cap(s.root)+'</em>. That is not bad luck. That is a loop.';
+    var loop3 = [
+      'You have come back to <em>'+cap(s.avoid)+'</em> '+avoidCt+' times, always rooted in <em>'+cap(s.root)+'</em>. That is not bad luck. That is a loop.',
+      '<em>'+cap(s.avoid)+'</em> and <em>'+cap(s.root)+'</em> — '+avoidCt+' sessions, same combination. The loop is visible now.',
+      'Same avoidance. Same root. '+avoidCt+' times. You are not stuck — you are circling something specific.',
+    ];
+    return loop3[total % loop3.length];
   }
   if (avoidCt >= 2) {
-    return '<em>'+cap(s.avoid)+'</em> keeps coming up in <em>'+cap(s.area)+'</em>. The root is still <em>'+cap(s.root)+'</em>. Same place — but you are looking at it now, which changes something.';
+    var repeat2 = [
+      '<em>'+cap(s.avoid)+'</em> keeps coming up in <em>'+cap(s.area)+'</em>. The root is still <em>'+cap(s.root)+'</em>. Same place — but you are looking at it now.',
+      'Second time here with <em>'+cap(s.avoid)+'</em>. The root — <em>'+cap(s.root)+'</em> — is consistent. That is information.',
+      '<em>'+cap(s.avoid)+'</em> in <em>'+cap(s.area)+'</em> again. Rooted in <em>'+cap(s.root)+'</em> again. The pattern is forming.',
+    ];
+    return repeat2[total % repeat2.length];
   }
+  // New combination — 3 variants per area keyed by total session count
+  var areaFirstPool = {
+    discipline: [
+      '<em>'+cap(s.avoid)+'</em> is the block. <em>'+cap(s.root)+'</em> is what is feeding it. That is the specific combination to work on.',
+      'In <em>Discipline</em> — the block is <em>'+cap(s.avoid)+'</em>, the fuel is <em>'+cap(s.root)+'</em>. Those two things together explain a lot.',
+      '<em>'+cap(s.root)+'</em> underneath <em>'+cap(s.avoid)+'</em> in <em>Discipline</em>. That is a pattern worth naming.',
+    ],
+    relation:   [
+      'In <em>Relationship</em> — <em>'+cap(s.avoid)+'</em>, driven by <em>'+cap(s.root)+'</em>. The interpersonal pattern is starting to show.',
+      'The relationship block is <em>'+cap(s.avoid)+'</em> rooted in <em>'+cap(s.root)+'</em>. That combination shapes more than just this situation.',
+      '<em>'+cap(s.root)+'</em> is what makes <em>'+cap(s.avoid)+'</em> feel impossible in relationship. That is the thing to work with.',
+    ],
+    direction:  [
+      'The direction question is about <em>'+cap(s.avoid)+'</em>, rooted in <em>'+cap(s.root)+'</em>. That is a specific and solvable thing.',
+      'In <em>Direction</em> — avoiding <em>'+cap(s.avoid)+'</em> because of <em>'+cap(s.root)+'</em>. The path is not unclear. The blocker is.',
+      '<em>'+cap(s.avoid)+'</em> in the direction space — fed by <em>'+cap(s.root)+'</em>. That is what is keeping the decision open.',
+    ],
+    identity:   [
+      'In <em>Identity</em> — avoiding <em>'+cap(s.avoid)+'</em> because of <em>'+cap(s.root)+'</em>. The self-concept piece is in there.',
+      'The identity block: <em>'+cap(s.avoid)+'</em>, rooted in <em>'+cap(s.root)+'</em>. That specific combination is running your self-image.',
+      '<em>'+cap(s.root)+'</em> is what makes <em>'+cap(s.avoid)+'</em> feel so loaded in <em>Identity</em>. That is the real work.',
+    ],
+    mind:       [
+      'The mental loop is around <em>'+cap(s.avoid)+'</em>, fed by <em>'+cap(s.root)+'</em>. Naming it is the first step out of it.',
+      'In <em>Mind</em> — the loop is <em>'+cap(s.avoid)+'</em>, the fuel is <em>'+cap(s.root)+'</em>. That combination keeps the spiral running.',
+      '<em>'+cap(s.root)+'</em> underneath <em>'+cap(s.avoid)+'</em> — that is the engine of the mental noise. Naming it changes something.',
+    ],
+    work:       [
+      'In <em>Work</em> — <em>'+cap(s.avoid)+'</em> is the stuck point, driven by <em>'+cap(s.root)+'</em>. That is the actual problem under the surface problem.',
+      'The work block is <em>'+cap(s.avoid)+'</em>. The root is <em>'+cap(s.root)+'</em>. Most people never get past the surface layer. You did.',
+      '<em>'+cap(s.root)+'</em> is what makes <em>'+cap(s.avoid)+'</em> so persistent in <em>Work</em>. That is the combination to address.',
+    ],
+    addiction:  [
+      'The avoidance is <em>'+cap(s.avoid)+'</em>. The root is <em>'+cap(s.root)+'</em>. That combination is the real thing to look at.',
+      'In <em>Addiction</em> — avoiding <em>'+cap(s.avoid)+'</em>, rooted in <em>'+cap(s.root)+'</em>. The pattern under the pattern.',
+      '<em>'+cap(s.root)+'</em> underneath <em>'+cap(s.avoid)+'</em>. That is the real driver. The behaviour is just what it looks like on the surface.',
+    ],
+    depression: [
+      'The weight is around <em>'+cap(s.avoid)+'</em>, rooted in <em>'+cap(s.root)+'</em>. You looked at it directly. That is not small.',
+      'In <em>Depression</em> — <em>'+cap(s.avoid)+'</em>, fed by <em>'+cap(s.root)+'</em>. You named both. That matters.',
+      '<em>'+cap(s.root)+'</em> underneath <em>'+cap(s.avoid)+'</em> — in depression, that combination is usually the thing that has been running longest.',
+    ],
+  };
+  var pool = areaFirstPool[s.area];
+  if (pool) return pool[total % pool.length];
   return 'Today: <em>'+cap(s.area)+'</em>, facing <em>'+cap(s.avoid)+'</em>, driven by <em>'+cap(s.root)+'</em>. After '+total+' sessions, the shape of this is becoming visible.';
 }
 
@@ -1334,6 +2357,9 @@ function saveCommit() {
   if (cb) cb.style.display = 'none';
 }
 
+// ═══════════════════════════════════════════════
+// INSIGHT — no label, just speaks
+// ═══════════════════════════════════════════════
 async function fetchInsight(d) {
   var block = document.getElementById('insight-block');
   var s = sess;
@@ -1353,23 +2379,43 @@ async function fetchInsight(d) {
     ? ' This person is dealing with '+s.area+'. Be especially precise and human — no platitudes.'
     : '';
 
+  var avoidCt2 = sessions.filter(function(x){ return x.avoid===s.avoid; }).length;
+  var rootCt2  = sessions.filter(function(x){ return x.root===s.root; }).length;
+  var honestlyKnew = s.honesty === 'known' || s.honesty === 'buried';
+  var saidNewButRepeating = s.honesty === 'new' && (avoidCt2 >= 2 || rootCt2 >= 2);
+  var avgMoodAll = total > 1 ? (sessions.reduce(function(a,x){ return a+(x.mood||5); },0)/total).toFixed(1) : null;
+
+  var extraContext = '';
+  if (avoidCt2 >= 2) extraContext += ' They have avoided "'+s.avoid+'" '+avoidCt2+' times total.';
+  if (rootCt2 >= 2)  extraContext += ' "'+cap(s.root)+'" has been the root '+rootCt2+' times.';
+  if (saidNewButRepeating) extraContext += ' IMPORTANT: They said this felt "new" but the same avoidance/root has appeared before — gently name this contradiction.';
+  if (honestlyKnew) extraContext += ' They admitted they already knew this. Call out the gap between knowing and acting.';
+  if (s.followup) extraContext += ' The deep question they were asked: "'+s.followup+'"';
+  if (avgMoodAll) extraContext += ' Average mood across all sessions: '+avgMoodAll+'/10 (today: '+s.mood+'/10).';
+
   var prompt = 'You are a mirror. Not a therapist, not a coach. You reflect what you see precisely, without softening.\n\n'
     +history+'\n\n'
     +'Today: area='+s.area+', avoiding='+s.avoid+', root='+s.root+', mood='+s.mood+'/10'
     +(s.write ? ', they wrote: "'+s.write+'"' : '')
     +(s.honesty ? ', honesty check: "'+s.honesty+'"' : '')+'.'
+    +extraContext
     +sensitiveNote+'\n\n'
-    +'Write 2-3 sentences as the mirror speaking. Name what you see. Be specific to their data. '
+    +'Write 2-3 sentences as the mirror speaking. Name exactly what you see — be specific to their actual data, not generic. '
     +'Do not give advice. Do not motivate. Do not say journey. Do not say it is okay. '
-    +'Sound like a very honest perceptive friend who has been watching carefully. '
-    +'If they said they have known for a while — call that out directly. '
-    +'If a pattern is repeating — name the number. '
-    +'If area is depression or addiction — be warm but still honest, not clinical.';
+    +'Sound like an honest, perceptive friend who has been watching for a while. '
+    +'If a pattern is repeating — name the exact number. '
+    +'If they said new but the pattern repeats — name that contradiction directly. '
+    +'If area is depression or addiction — be warm but still honest, never clinical or generic.';
 
   try {
     var r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
@@ -1382,7 +2428,11 @@ async function fetchInsight(d) {
       block.innerHTML = '';
       await typeInto(block, text.trim(), 16);
       var d2 = load();
-      if (d2.sessions.length) d2.sessions[d2.sessions.length-1].insight = text.trim();
+      // Match by timestamp to avoid race condition if new session saved
+      var targetTs = s.ts;
+      var targetIdx = d2.sessions.findIndex(function(x){ return x.ts === targetTs; });
+      if (targetIdx >= 0) d2.sessions[targetIdx].insight = text.trim();
+      else if (d2.sessions.length) d2.sessions[d2.sessions.length-1].insight = text.trim();
       save(d2);
     } else {
       block.textContent = fallbackInsight(s, sessions);
@@ -1394,17 +2444,50 @@ async function fetchInsight(d) {
 
 function fallbackInsight(s, sessions) {
   var ct = sessions.filter(function(x){ return x.avoid===s.avoid; }).length;
+  var n  = sessions.length;
   if (s.area === 'addiction') {
-    return 'You named it. That is further than most people get with this. The next move is not knowing more about it — you already know enough. The next move is one concrete thing.';
+    var addPool = [
+      'You named it. That is further than most people get with this. The next move is not knowing more — you already know enough. The next move is one concrete thing.',
+      'You came back to look at it again. That is not weakness — that is the part of you that has not given up on changing this.',
+      'Addiction is '+cap(s.root)+' wearing a different face. The avoidance is "'+s.avoid+'". You see it. What happens next is what matters.',
+    ];
+    return addPool[n % addPool.length];
   }
   if (s.area === 'depression') {
-    return 'You came here when it would have been easier not to. That is something. The '+cap(s.root)+' underneath this — it is real, and it has been running for a while. You are looking at it now.';
+    var depPool = [
+      'You came here when it would have been easier not to. That is something. The '+cap(s.root)+' underneath this — it is real, and it has been running. You are looking at it now.',
+      'The weight is "'+cap(s.avoid)+'" and the root is '+cap(s.root)+'. You named both. On a hard day, that is a real thing.',
+      'Depression shrinks the field of what feels possible. You still came here. The '+cap(s.root)+' underneath it — that is the real thing to work with.',
+    ];
+    return depPool[n % depPool.length];
   }
-  if (ct >= 3) return 'You have named "'+cap(s.root)+'" as the root of avoiding "'+s.avoid+'" '+ct+' times now. At some point, naming it stops being insight and starts being a reason to stay still.';
-  if (s.honesty === 'known' || s.honesty === 'buried') return 'You already knew. That is the harder truth — not that you did not see it, but that you saw it and kept moving around it anyway.';
-  return 'The area is '+cap(s.area)+', the avoidance is "'+s.avoid+'", the root is '+cap(s.root)+'. That specific combination is yours. The question is what you do now that you have said it out loud.';
+  if (ct >= 3) {
+    var rep3 = [
+      'You have named "'+cap(s.root)+'" as the root of avoiding "'+s.avoid+'" '+ct+' times now. At some point, naming it stops being insight and starts being a reason to stay still.',
+      '"'+cap(s.avoid)+'" — '+ct+' times, same root: '+cap(s.root)+'. The loop is visible. The question now is not what the pattern is. The question is what you are going to do about it.',
+      ct+' sessions with the same avoidance and root. You are not unaware. You are, for some reason, not yet moving. What is the actual next step?',
+    ];
+    return rep3[(n + ct) % rep3.length];
+  }
+  if (s.honesty === 'known' || s.honesty === 'buried') {
+    var knownPool = [
+      'You already knew. That is the harder truth — not that you did not see it, but that you saw it and kept moving around it anyway.',
+      'Known for a while. The gap between knowing and doing is where this lives. You are in that gap right now.',
+      'You buried it, and it came back up. It always does. The only variable is what you do with it this time.',
+    ];
+    return knownPool[n % knownPool.length];
+  }
+  var genPool = [
+    'The area is '+cap(s.area)+', the avoidance is "'+s.avoid+'", the root is '+cap(s.root)+'. That specific combination is yours. The question is what you do now that you have said it out loud.',
+    cap(s.root)+' is what is feeding the avoidance of "'+s.avoid+'" in '+cap(s.area)+'. That is the shape of the thing. Naming it is step one.',
+    'In '+cap(s.area)+', avoiding "'+s.avoid+'" because of '+cap(s.root)+'. You looked at it directly. Most people do not get this far.',
+  ];
+  return genPool[n % genPool.length];
 }
 
+// ═══════════════════════════════════════════════
+// PATTERNS SCREEN
+// ═══════════════════════════════════════════════
 async function renderPatterns() {
   var d = load();
   var sessions = d.sessions;
@@ -1412,11 +2495,13 @@ async function renderPatterns() {
 
   document.getElementById('pat-n').textContent = total;
 
+  // Depth on patterns page
   var depth = calcDepth(sessions);
   var level = getDepthLevel(depth);
   document.getElementById('dpat-num').textContent = depth;
   document.getElementById('dpat-title').textContent = level.label;
-  document.getElementById('dpat-desc').textContent = level.desc;
+  document.getElementById('dpat-desc').textContent = getDepthDesc(level, sessions.length);
+
   document.getElementById('tb-badge').textContent = 'Depth '+depth;
 
   render30Grid(d);
@@ -1431,15 +2516,18 @@ async function renderPatterns() {
     return;
   }
 
+  // Loop
   var topA = topOf(sessions,'avoid'), topR = topOf(sessions,'root');
   var loop = getLoop(topR, topA);
   var lp = document.getElementById('loop-pat');
   if (loop && total >= 3) {
     lp.classList.add('show');
     document.getElementById('loop-pat-name').textContent = d.loopName || loop.name;
-    document.getElementById('loop-pat-desc').textContent = loop.desc;
+    var loopAvoidCt = sessions.filter(function(s){ return s.avoid===topA; }).length;
+    document.getElementById('loop-pat-desc').textContent = getLoopDesc(loop, loopAvoidCt);
   } else { lp.classList.remove('show'); }
 
+  // Bars
   var ac = countBy(sessions,'avoid');
   if (Object.keys(ac).length) { document.getElementById('bar-avoid').style.display='block'; renderBars('bars-avoid',ac); }
   var rc = countBy(sessions,'root');
@@ -1447,13 +2535,17 @@ async function renderPatterns() {
   var aac = countBy(sessions,'area');
   if (Object.keys(aac).length) { document.getElementById('bar-area').style.display='block'; renderBars('bars-area',aac); }
 
+  // Weekly
   var wb = document.getElementById('weekly-box');
   if (total >= 3) { wb.classList.add('show'); await fetchWeekly(sessions, d); }
   else { wb.classList.remove('show'); }
 
+  // Past cards
   var pl = document.getElementById('past-list');
   pl.innerHTML = '';
-  sessions.slice().reverse().slice(0,15).forEach(function(s) {
+  var allSessions = sessions.slice().reverse();
+  var showCount = 15;
+  allSessions.slice(0, showCount).forEach(function(s) {
     var dt = new Date((s.date || '') + 'T00:00:00');
     if (isNaN(dt.getTime())) dt = new Date(s.ts || Date.now());
     var ds = dt.toLocaleDateString('en-IN', {weekday:'short',day:'numeric',month:'short'});
@@ -1479,6 +2571,32 @@ async function renderPatterns() {
     }
     pl.appendChild(card);
   });
+  if (allSessions.length > showCount) {
+    var moreBtn = document.createElement('button');
+    moreBtn.className = 'btn-ghost nl';
+    moreBtn.style.cssText = 'margin-top:12px;width:100%;justify-content:center;';
+    moreBtn.textContent = 'Show '+(allSessions.length - showCount)+' more sessions';
+    moreBtn.addEventListener('click', function(){
+      moreBtn.remove();
+      allSessions.slice(showCount).forEach(function(sx){
+        var dtx = new Date((sx.date||'')+'T00:00:00');
+        if (isNaN(dtx.getTime())) dtx = new Date(sx.ts||Date.now());
+        var dsx = dtx.toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'});
+        var cx = document.createElement('div'); cx.className='past-card';
+        var ddx = document.createElement('div'); ddx.className='past-d'; ddx.textContent=dsx;
+        var ttx = document.createElement('div'); ttx.className='past-t';
+        ttx.innerHTML='<strong>'+esc(cap(sx.area||'—'))+'</strong> — faced <em>'
+          +esc(cap(sx.avoid||'—'))+'</em>, rooted in <em>'+esc(cap(sx.root||'—'))+'</em>'
+          +(sx.mood?' &middot; Energy: '+sx.mood+'/10':'');
+        cx.appendChild(ddx); cx.appendChild(ttx);
+        if(sx.write){var wx=document.createElement('div');wx.className='past-write';wx.textContent='"'+sx.write+'"';cx.appendChild(wx);}
+        if(sx.insight){var ix=document.createElement('div');ix.className='past-insight';ix.textContent=sx.insight;cx.appendChild(ix);}
+        if(sx.commitment){var tx=document.createElement('span');tx.className='past-tag';tx.textContent=sx.commitment;cx.appendChild(tx);}
+        pl.appendChild(cx);
+      });
+    });
+    pl.appendChild(moreBtn);
+  }
 }
 
 function render30Grid(d) {
@@ -1488,10 +2606,14 @@ function render30Grid(d) {
   var startDate = new Date((d.start || t) + 'T00:00:00');
   var done = {};
   d.sessions.forEach(function(s){ if (s.date) done[s.date] = true; });
-  for (var i = 0; i < 30; i++) {
+  // Expand grid beyond 30 if user has sessions past day 30
+  var todayDt = new Date(today() + 'T00:00:00');
+  var daysSinceStart = Math.round((todayDt - startDate) / 86400000);
+  var gridDays = Math.max(30, daysSinceStart + 3);
+  for (var i = 0; i < gridDays; i++) {
     var dt = new Date(startDate);
     dt.setDate(dt.getDate() + i);
-    var ds = dt.toISOString().slice(0,10);
+    var ds = dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
     var wrap = document.createElement('div');
     var gd = document.createElement('div');
     gd.className = 'gd'+(done[ds]?' done':'')+(ds===t?' today':'')+(ds>t?' future':'');
@@ -1523,6 +2645,21 @@ function renderBars(cid, counts) {
   });
 }
 
+function weeklyFallback(topA, topR, sessions, depth) {
+  var n = sessions.length;
+  var aCt = sessions.filter(function(s){ return s.avoid===topA; }).length;
+  var rCt = sessions.filter(function(s){ return s.root===topR; }).length;
+  var avgMood = (sessions.reduce(function(a,s){ return a+(s.mood||5); },0)/n).toFixed(1);
+  var pool = [
+    '"'+cap(topA)+'" has come up '+aCt+' times. "'+cap(topR)+'" has been the root '+rCt+' times. That combination is the pattern.',
+    n+' sessions in. The consistent avoidance is "'+topA+'", the consistent root is "'+topR+'". You know this loop well.',
+    'Average energy: '+avgMood+'/10. Most avoided: "'+topA+'". Root: "'+topR+'". The pattern is stable — which means it is a choice.',
+    'Depth '+depth+'. "'+cap(topA)+'" keeps coming up. "'+cap(topR)+'" keeps driving it. That is not coincidence.',
+    'Across '+n+' sessions: "'+topA+'" ('+aCt+'x), rooted in "'+topR+'" ('+rCt+'x). The mirror is showing you the same thing repeatedly.',
+  ];
+  return pool[n % pool.length];
+}
+
 async function fetchWeekly(sessions, d) {
   var el = document.getElementById('weekly-text');
   el.textContent = '...';
@@ -1532,17 +2669,27 @@ async function fetchWeekly(sessions, d) {
   var depth = calcDepth(sessions);
   var hasSensitive = sessions.some(function(s){ return s.area==='addiction'||s.area==='depression'; });
 
-  var prompt = 'You are an honest observer. In 2 sentences, say what this person\'s data reveals — no advice, no softening, just reflection.'
+  var honestSessions = sessions.filter(function(s){ return s.honesty==='known'||s.honesty==='buried'; }).length;
+  var topArea = topOf(sessions,'area');
+  var prompt = 'You are an honest observer. In 2 sentences, name what this person pattern data reveals — no advice, no softening, just reflection. Vary the angle from a pure frequency count — look at what the combination of data means about who this person is right now.'
     + (hasSensitive ? ' They have reflected on addiction or depression. Be human, not clinical.' : '')
     + '\n\nData: '+sessions.length+' sessions. '
     + 'Most avoided: "'+topA+'" ('+sessions.filter(function(s){ return s.avoid===topA; }).length+'x). '
     + 'Most common root: "'+topR+'" ('+sessions.filter(function(s){ return s.root===topR; }).length+'x). '
-    + 'Average mood: '+avgMood+'/10. Depth score: '+depth+'/10.';
+    + 'Most visited area: "'+topArea+'". '
+    + 'Average mood: '+avgMood+'/10. Depth: '+depth+'/10. '
+    + 'Sessions where they admitted knowing for a while: '+honestSessions+'. '
+    + 'Give a different observation angle each time — not just repeating the avoidance and root.';
 
   try {
     var r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
@@ -1551,12 +2698,15 @@ async function fetchWeekly(sessions, d) {
     });
     var data = await r.json();
     var t = data.content && data.content[0] && data.content[0].text;
-    el.textContent = t ? t.trim() : 'Most repeated avoidance: "'+topA+'". Most common root: "'+topR+'". That loop keeps showing up.';
+    el.textContent = t ? t.trim() : weeklyFallback(topA, topR, sessions, depth);
   } catch(e) {
-    el.textContent = 'Most repeated avoidance: "'+topA+'". Most common root: "'+topR+'". That combination is the pattern.';
+    el.textContent = weeklyFallback(topA, topR, sessions, depth);
   }
 }
 
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
 function resetAll() {
   if (!confirm('Delete everything and start over?')) return;
   localStorage.removeItem(KEY);
@@ -1564,8 +2714,10 @@ function resetAll() {
   goHome();
 }
 
+// ═══════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════
 updateHome();
 </script>
 </body>
 </html>
-```
